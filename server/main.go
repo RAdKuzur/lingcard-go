@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"lingcard-go/handlers/authHandler"
+	"lingcard-go/handlers/dictionaryHandler"
 	"lingcard-go/handlers/languageHandler"
 	"lingcard-go/handlers/voteHandler"
 	"lingcard-go/helpers/database"
@@ -14,9 +15,11 @@ import (
 	"lingcard-go/repositories/voiceRepository"
 	"lingcard-go/repositories/voteOptionRepository"
 	"lingcard-go/repositories/voteRepository"
+	"lingcard-go/repositories/wordTranslationRepository"
 	"lingcard-go/services/authService"
 	"lingcard-go/services/languageService"
 	"lingcard-go/services/voteService"
+	"lingcard-go/services/wordTranslationService"
 	"net/http"
 )
 
@@ -33,14 +36,17 @@ func main() {
 	voteRepo := voteRepository.New(dbConnect)
 	voiceRepo := voiceRepository.New(dbConnect)
 	voteOptionRepo := voteOptionRepository.New(dbConnect)
+	wordTranslationRepo := wordTranslationRepository.New(dbConnect)
 
 	authSer := authService.New(userRepo, tokenRepo)
 	langSer := languageService.New(langRepo, availableLangRepo)
 	voteSer := voteService.New(voteRepo, voiceRepo, voteOptionRepo)
+	wordTransSer := wordTranslationService.New(wordTranslationRepo)
 
 	authHand := authHandler.New(authSer)
 	langHand := languageHandler.New(langSer)
 	voteHand := voteHandler.New(voteSer)
+	dictionaryHand := dictionaryHandler.New(wordTransSer)
 
 	router.Post("/api/login", authHand.Login)
 	router.Post("/api/logout", authHand.Logout)
@@ -57,6 +63,8 @@ func main() {
 	router.Get("/api/votes/{id}", voteHand.GetOne)
 	router.Post("/api/voices/{voteOptionId}", voteHand.GetAllVotes)
 	router.Post("/api/cancel-voices/{voteOptionId}", voteHand.GetAllVotes)
+
+	router.Get("/api/dictionary/{baseLanguageId}/language/{targetLanguageId}", dictionaryHand.Translate)
 
 	http.ListenAndServe(":6611", router)
 }
