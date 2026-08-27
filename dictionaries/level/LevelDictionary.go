@@ -1,6 +1,6 @@
 package level
 
-type RoleDictionary struct{}
+type LevelDictionary struct{}
 
 const (
 	Beginner          = 1
@@ -11,7 +11,7 @@ const (
 	Proficiency       = 6
 )
 
-func (r RoleDictionary) GetList() map[int]string {
+func (r LevelDictionary) GetList() map[int]string {
 	return map[int]string{
 		Beginner:          "Начальный",
 		Elementary:        "Базовый",
@@ -22,7 +22,7 @@ func (r RoleDictionary) GetList() map[int]string {
 	}
 }
 
-func (r RoleDictionary) Get(index int) (string, bool) {
+func (r LevelDictionary) Get(index int) (string, bool) {
 	name, exists := r.GetList()[index]
 	return name, exists
 }

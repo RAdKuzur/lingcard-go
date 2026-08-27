@@ -20,7 +20,7 @@ func (s *WordTranslationService) Translate(baseLangId, targetLangId, page, limit
 	var result []translation.WordTranslationDTO
 	items := s.wordTranslationRepository.GetPaginateByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, page, limit, search)
 	for _, item := range items {
-		Level, _ := level.RoleDictionary{}.Get(item.Level)
+		Level, _ := level.LevelDictionary{}.Get(item.Level)
 		result = append(result, translation.WordTranslationDTO{
 			ID:            item.ID,
 			Translation:   item.Translation,
