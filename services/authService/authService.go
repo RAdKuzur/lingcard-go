@@ -3,7 +3,7 @@ package authService
 import (
 	"errors"
 	"golang.org/x/crypto/bcrypt"
-	"lingcard-go/dictionaries"
+	"lingcard-go/dictionaries/role"
 	"lingcard-go/dto/request"
 	"lingcard-go/dto/token"
 	"lingcard-go/helpers/auth"
@@ -123,7 +123,7 @@ func (s *AuthService) Register(dto request.RegisterDTO, r *http.Request) (token.
 			Name:             dto.Name,
 			Password:         string(password),
 			Email:            nil,
-			Role:             dictionaries.RoleUser,
+			Role:             role.RoleUser,
 			TargetLanguageID: dto.TargetLang,
 			BaseLanguageID:   dto.BaseLangId,
 			IsBanned:         false,
@@ -175,7 +175,7 @@ func (s *AuthService) User(accessToken string) (request.AuthUserDTO, error) {
 			Role:     "",
 		}, err
 	}
-	role, _ := dictionaries.RoleDictionary{}.Get(User.Role)
+	role, _ := role.RoleDictionary{}.Get(User.Role)
 
 	return request.AuthUserDTO{
 		Username: username,

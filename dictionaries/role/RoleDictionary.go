@@ -1,4 +1,4 @@
-package dictionaries
+package role
 
 type RoleDictionary struct{}
 

@@ -1,7 +1,8 @@
 package wordTranslationService
 
 import (
-	"lingcard-go/models/words"
+	"lingcard-go/dictionaries/level"
+	"lingcard-go/dto/translation"
 	"lingcard-go/repositories/wordTranslationRepository"
 )
 
@@ -15,9 +16,19 @@ func New(wordTranslationRepository *wordTranslationRepository.WordTranslationRep
 	}
 }
 
-func (s *WordTranslationService) Translate(baseLangId, targetLangId, page, limit int, search string) []words.WordTranslationDTO {
-	var result []words.WordTranslationDTO
-	result = s.wordTranslationRepository.GetPaginateByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, page, limit, search)
+func (s *WordTranslationService) Translate(baseLangId, targetLangId, page, limit int, search string) []translation.WordTranslationDTO {
+	var result []translation.WordTranslationDTO
+	items := s.wordTranslationRepository.GetPaginateByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, page, limit, search)
+	for _, item := range items {
+		Level, _ := level.RoleDictionary{}.Get(item.Level)
+		result = append(result, translation.WordTranslationDTO{
+			ID:            item.ID,
+			Translation:   item.Translation,
+			Text:          item.Text,
+			Transcription: item.Transcription,
+			Level:         Level,
+		})
+	}
 	return result
 }
 

@@ -1,4 +1,4 @@
-package words
+package translation
 
 type WordTranslationDTO struct {
 	ID            int    `json:"id"`
