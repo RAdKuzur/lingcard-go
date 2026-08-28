@@ -71,7 +71,7 @@ func main() {
 	postSer := postService.New(postRepo, langRepo, reactionRepo, commentRepo, userRepo)
 	reactionSer := reactionService.New(reactionRepo, postRepo)
 	userSer := userService.New(userRepo, courseRepo, wordTranslationRepo)
-	courseSer := courseService.New(courseRepo, wordTranslationRepo)
+	courseSer := courseService.New(courseRepo, wordTranslationRepo, wordRepo)
 
 	authHand := authHandler.New(authSer)
 	langHand := languageHandler.New(langSer)

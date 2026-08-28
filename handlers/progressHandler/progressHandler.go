@@ -1,6 +1,7 @@
 package progressHandler
 
 import (
+	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"lingcard-go/services/courseService"
 	"net/http"
@@ -36,10 +37,16 @@ func (h *ProgressHandler) Progress(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	h.courseService.WordsByStatus(ctx, status, page, limit, search)
+	words, count := h.courseService.WordsByStatus(ctx, status, page, limit, search)
 
+	response := map[string]interface{}{
+		"success":     true,
+		"data":        words,
+		"amountWords": count,
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *ProgressHandler) ClearProgress(w http.ResponseWriter, r *http.Request) {
