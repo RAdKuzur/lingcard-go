@@ -14,6 +14,11 @@ func New(db *gorm.DB) *WordTranslationRepository {
 		db: db,
 	}
 }
+func (r *WordTranslationRepository) Find(id int) word.WordTranslation {
+	var item word.WordTranslation
+	r.db.Raw("SELECT * FROM word_translations WHERE id = ?", id).Scan(&item)
+	return item
+}
 
 func (r *WordTranslationRepository) GetPaginateByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, page, limit int, search string) []word.WordTranslation {
 	var items []word.WordTranslation
