@@ -18,3 +18,7 @@ type RegisterDTO struct {
 	Role       int    `json:"role"`
 	IsBanned   bool   `json:"is_banned"`
 }
+
+type CommentRequestDTO struct {
+	Text string `json:"text"`
+}

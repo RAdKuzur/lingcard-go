@@ -34,3 +34,9 @@ func (r *LanguageRepository) FindByCode(code string) language.Language {
 	_ = r.db.First(&Language, "code = ?", code).Error
 	return Language
 }
+
+func (r *LanguageRepository) Find(id int) language.Language {
+	var Language language.Language
+	_ = r.db.First(&Language, "id = ?", id).Error
+	return Language
+}
