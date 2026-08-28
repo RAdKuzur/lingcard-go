@@ -1,11 +1,10 @@
 package word
 
 type WordTranslation struct {
-	ID            int    `gorm:"column:id"`
-	Text          string `gorm:"column:text"`
-	Translation   string `gorm:"column:translation"`
-	Transcription string `gorm:"column:transcription"`
-	Level         int    `gorm:"column:level"`
+	ID               int    `gorm:"column:id"`
+	Translation      string `gorm:"column:translation"`
+	WordID           int    `gorm:"column:word_id"`
+	TargetLanguageID int    `gorm:"column:target_language_id"`
 }
 
 type Word struct {

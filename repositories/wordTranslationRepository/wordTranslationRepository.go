@@ -62,3 +62,48 @@ func (r *WordTranslationRepository) CountNewWords(baseLangId, targetLangId int, 
 	query.Scan(&count)
 	return count
 }
+
+func (r *WordTranslationRepository) GetSearchNewWords(baseLangId, targetLangId, page, limit int, search string, exceptID []int) []word.WordTranslation {
+
+	var words []word.WordTranslation
+
+	query := r.db.Table("word_translations").
+		Select("word_translations.*").
+		Joins("JOIN words ON word_translations.word_id = words.id").
+		Where("word_translations.target_language_id = ?", baseLangId).
+		Where("words.language_id = ?", targetLangId)
+
+	if search != "" {
+		query = query.Where("words.text LIKE ?", "%"+search+"%")
+	}
+
+	if len(exceptID) > 0 {
+		query = query.Where("words.id NOT IN (?)", exceptID)
+	}
+	offset := (page - 1) * limit
+	query.Offset(offset).Limit(limit).Find(&words)
+	return words
+
+}
+
+func (r *WordTranslationRepository) CountSearchNewWords(baseLangId, targetLangId int, search string, exceptID []int) int {
+
+	var count int
+
+	query := r.db.Table("word_translations").
+		Select("COUNT(*)").
+		Joins("JOIN words ON word_translations.word_id = words.id").
+		Where("word_translations.target_language_id = ?", baseLangId).
+		Where("words.language_id = ?", targetLangId)
+
+	if search != "" {
+		query = query.Where("words.text LIKE ?", "%"+search+"%")
+	}
+
+	if len(exceptID) > 0 {
+		query = query.Where("words.id NOT IN (?)", exceptID)
+	}
+	query.Scan(&count)
+	return count
+
+}

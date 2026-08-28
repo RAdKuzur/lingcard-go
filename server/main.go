@@ -26,6 +26,7 @@ import (
 	"lingcard-go/repositories/voiceRepository"
 	"lingcard-go/repositories/voteOptionRepository"
 	"lingcard-go/repositories/voteRepository"
+	"lingcard-go/repositories/wordRepository"
 	"lingcard-go/repositories/wordTranslationRepository"
 	"lingcard-go/services/authService"
 	"lingcard-go/services/courseService"
@@ -60,11 +61,12 @@ func main() {
 	reactionRepo := reactionRepository.New(dbConnect)
 	commentRepo := commentRepository.New(dbConnect)
 	courseRepo := courseRepository.New(dbConnect)
+	wordRepo := wordRepository.New(dbConnect)
 
 	authSer := authService.New(userRepo, tokenRepo)
 	langSer := languageService.New(langRepo, availableLangRepo)
 	voteSer := voteService.New(voteRepo, voiceRepo, voteOptionRepo)
-	wordTransSer := wordTranslationService.New(wordTranslationRepo)
+	wordTransSer := wordTranslationService.New(wordTranslationRepo, wordRepo)
 	suggestionSer := suggestionService.New(suggestionRepo)
 	postSer := postService.New(postRepo, langRepo, reactionRepo, commentRepo, userRepo)
 	reactionSer := reactionService.New(reactionRepo, postRepo)

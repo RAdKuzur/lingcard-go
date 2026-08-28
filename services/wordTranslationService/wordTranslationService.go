@@ -3,16 +3,19 @@ package wordTranslationService
 import (
 	"lingcard-go/dictionaries/level"
 	"lingcard-go/dto/translation"
+	"lingcard-go/repositories/wordRepository"
 	"lingcard-go/repositories/wordTranslationRepository"
 )
 
 type WordTranslationService struct {
 	wordTranslationRepository *wordTranslationRepository.WordTranslationRepository
+	wordRepository            *wordRepository.WordRepository
 }
 
-func New(wordTranslationRepository *wordTranslationRepository.WordTranslationRepository) *WordTranslationService {
+func New(wordTranslationRepository *wordTranslationRepository.WordTranslationRepository, wordRepository *wordRepository.WordRepository) *WordTranslationService {
 	return &WordTranslationService{
 		wordTranslationRepository: wordTranslationRepository,
+		wordRepository:            wordRepository,
 	}
 }
 
@@ -20,12 +23,13 @@ func (s *WordTranslationService) Translate(baseLangId, targetLangId, page, limit
 	var result []translation.WordTranslationDTO
 	items := s.wordTranslationRepository.GetPaginateByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, page, limit, search)
 	for _, item := range items {
-		Level, _ := level.LevelDictionary{}.Get(item.Level)
+		word := s.wordRepository.Find(item.WordID)
+		Level, _ := level.LevelDictionary{}.Get(word.Level)
 		result = append(result, translation.WordTranslationDTO{
 			ID:            item.ID,
 			Translation:   item.Translation,
-			Text:          item.Text,
-			Transcription: item.Transcription,
+			Text:          word.Text,
+			Transcription: word.Transcription,
 			Level:         Level,
 		})
 	}
