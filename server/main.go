@@ -7,6 +7,7 @@ import (
 	"lingcard-go/handlers/dictionaryHandler"
 	"lingcard-go/handlers/languageHandler"
 	"lingcard-go/handlers/postHandler"
+	"lingcard-go/handlers/profileHandler"
 	"lingcard-go/handlers/reactionHandler"
 	"lingcard-go/handlers/suggestionHandler"
 	"lingcard-go/handlers/voteHandler"
@@ -14,6 +15,7 @@ import (
 	"lingcard-go/middlewares/authMiddleware"
 	"lingcard-go/repositories/availableLanguageRepository"
 	"lingcard-go/repositories/commentRepository"
+	"lingcard-go/repositories/courseRepository"
 	"lingcard-go/repositories/languageRepository"
 	"lingcard-go/repositories/postRepository"
 	"lingcard-go/repositories/reactionRepository"
@@ -25,10 +27,12 @@ import (
 	"lingcard-go/repositories/voteRepository"
 	"lingcard-go/repositories/wordTranslationRepository"
 	"lingcard-go/services/authService"
+	"lingcard-go/services/courseService"
 	"lingcard-go/services/languageService"
 	"lingcard-go/services/postService"
 	"lingcard-go/services/reactionService"
 	"lingcard-go/services/suggestionService"
+	"lingcard-go/services/userService"
 	"lingcard-go/services/voteService"
 	"lingcard-go/services/wordTranslationService"
 	"net/http"
@@ -54,6 +58,7 @@ func main() {
 	postRepo := postRepository.New(dbConnect)
 	reactionRepo := reactionRepository.New(dbConnect)
 	commentRepo := commentRepository.New(dbConnect)
+	courseRepo := courseRepository.New(dbConnect)
 
 	authSer := authService.New(userRepo, tokenRepo)
 	langSer := languageService.New(langRepo, availableLangRepo)
@@ -62,6 +67,8 @@ func main() {
 	suggestionSer := suggestionService.New(suggestionRepo)
 	postSer := postService.New(postRepo, langRepo, reactionRepo, commentRepo, userRepo)
 	reactionSer := reactionService.New(reactionRepo, postRepo)
+	userSer := userService.New(userRepo, courseRepo, wordTranslationRepo)
+	courseSer := courseService.New(courseRepo, wordTranslationRepo)
 
 	authHand := authHandler.New(authSer)
 	langHand := languageHandler.New(langSer)
@@ -70,6 +77,7 @@ func main() {
 	suggestionHand := suggestionHandler.New(suggestionSer)
 	postHand := postHandler.New(postSer)
 	reactionHand := reactionHandler.New(reactionSer)
+	profileHand := profileHandler.New(userSer, courseSer)
 
 	router.Route("/api", func(r chi.Router) {
 		r.Post("/login", authHand.Login)
@@ -104,6 +112,9 @@ func main() {
 			r.Post("/cancel-voices/{voteOptionId}", voteHand.GetAllVotes)
 			r.Get("/dictionary/{baseLanguageId}/language/{targetLanguageId}", dictionaryHand.Translate)
 			r.Post("/suggestions", suggestionHand.Create)
+
+			r.Get("/profile", profileHand.Profile)
+			r.Patch("/profile", profileHand.Update)
 		})
 
 	})

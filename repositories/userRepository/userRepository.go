@@ -4,6 +4,7 @@ import (
 	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"lingcard-go/dto/request"
 	"lingcard-go/models/user"
 )
 
@@ -82,6 +83,10 @@ func (r *UserRepository) Unique(name string) (bool, error) {
 
 	return false, nil
 }
+func (r *UserRepository) Update(id int, dto request.ProfileUpdateDTO) {
+	r.db.Exec("UPDATE users SET base_language_id = ?, target_language_id = ? WHERE id = ?", dto.BaseLanguageID, dto.TargetLanguageID, id)
+}
+
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil

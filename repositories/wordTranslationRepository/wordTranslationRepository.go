@@ -40,3 +40,20 @@ func (r *WordTranslationRepository) CountByTargetLanguageIdAndBaseLanguageId(bas
 	r.db.Raw(query, baseLangId, targetLangId).Scan(&count)
 	return count
 }
+
+func (r *WordTranslationRepository) CountNewWords(baseLangId, targetLangId int, coursesId []int) int {
+	var count int
+
+	query := r.db.Table("word_translations").
+		Select("COUNT(*)").
+		Joins("JOIN words ON word_translations.word_id = words.id").
+		Where("word_translations.target_language_id = ?", baseLangId).
+		Where("words.language_id = ?", targetLangId)
+
+	if len(coursesId) > 0 {
+		query = query.Where("words.id NOT IN (?)", coursesId)
+	}
+
+	query.Scan(&count)
+	return count
+}
