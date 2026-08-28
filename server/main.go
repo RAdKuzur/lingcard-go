@@ -112,8 +112,8 @@ func main() {
 			r.Get("/map-languages", langHand.GetLanguageMap)
 			r.Get("/votes", voteHand.GetAllVotes)
 			r.Get("/votes/{id}", voteHand.GetOne)
-			r.Post("/voices/{voteOptionId}", voteHand.GetAllVotes)
-			r.Post("/cancel-voices/{voteOptionId}", voteHand.GetAllVotes)
+			r.Post("/voices/{voteOptionId}", voteHand.Vote)
+			r.Post("/cancel-voices/{voteOptionId}", voteHand.CancelVote)
 			r.Get("/dictionary/{baseLanguageId}/language/{targetLanguageId}", dictionaryHand.Translate)
 			r.Post("/suggestions", suggestionHand.Create)
 

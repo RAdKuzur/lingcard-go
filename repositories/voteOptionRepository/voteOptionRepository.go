@@ -2,7 +2,7 @@ package voteOptionRepository
 
 import (
 	"gorm.io/gorm"
-	"lingcard-go/dto/voice"
+	"lingcard-go/models/voice"
 )
 
 type VoteOptionRepository struct {
@@ -15,8 +15,8 @@ func New(db *gorm.DB) *VoteOptionRepository {
 	}
 }
 
-func (r *VoteOptionRepository) FindByVoteId(id int) []voice.VoteOptionDTO {
-	var voteOptions []voice.VoteOptionDTO
+func (r *VoteOptionRepository) FindByVoteId(id int) []voice.VoteOption {
+	var voteOptions []voice.VoteOption
 	r.db.Raw("SELECT * FROM vote_options WHERE vote_id = ?", id).Find(&voteOptions)
 	return voteOptions
 }

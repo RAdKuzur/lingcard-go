@@ -2,7 +2,7 @@ package voteRepository
 
 import (
 	"gorm.io/gorm"
-	"lingcard-go/dto/voice"
+	"lingcard-go/models/voice"
 )
 
 type VoteRepository struct {
@@ -15,14 +15,14 @@ func New(db *gorm.DB) *VoteRepository {
 	}
 }
 
-func (r *VoteRepository) All() []voice.SimpleVoteDTO {
-	var votes []voice.SimpleVoteDTO
-	r.db.Raw("SELECT id, title, content FROM votes").Scan(&votes)
+func (r *VoteRepository) All() []voice.Vote {
+	var votes []voice.Vote
+	r.db.Raw("SELECT * FROM votes").Scan(&votes)
 	return votes
 }
 
-func (r *VoteRepository) Find(id int) voice.VoteDTO {
-	var vote voice.VoteDTO
-	r.db.Raw("SELECT * FROM votes WHERE id = ?", id).Scan(&vote)
-	return vote
+func (r *VoteRepository) Find(id int) voice.Vote {
+	var Vote voice.Vote
+	r.db.Raw("SELECT * FROM votes WHERE id = ?", id).Scan(&Vote)
+	return Vote
 }
