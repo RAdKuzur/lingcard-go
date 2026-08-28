@@ -6,10 +6,13 @@ import (
 	"lingcard-go/handlers/authHandler"
 	"lingcard-go/handlers/dictionaryHandler"
 	"lingcard-go/handlers/languageHandler"
+	"lingcard-go/handlers/suggestionHandler"
 	"lingcard-go/handlers/voteHandler"
 	"lingcard-go/helpers/database"
+	"lingcard-go/middlewares/authMiddleware"
 	"lingcard-go/repositories/availableLanguageRepository"
 	"lingcard-go/repositories/languageRepository"
+	"lingcard-go/repositories/suggestionRepository"
 	"lingcard-go/repositories/tokenRepository"
 	"lingcard-go/repositories/userRepository"
 	"lingcard-go/repositories/voiceRepository"
@@ -18,6 +21,7 @@ import (
 	"lingcard-go/repositories/wordTranslationRepository"
 	"lingcard-go/services/authService"
 	"lingcard-go/services/languageService"
+	"lingcard-go/services/suggestionService"
 	"lingcard-go/services/voteService"
 	"lingcard-go/services/wordTranslationService"
 	"net/http"
@@ -26,6 +30,8 @@ import (
 func main() {
 	db := database.New()
 	dbConnect := db.Connect()
+	authMid := authMiddleware.New(dbConnect)
+
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
@@ -37,34 +43,40 @@ func main() {
 	voiceRepo := voiceRepository.New(dbConnect)
 	voteOptionRepo := voteOptionRepository.New(dbConnect)
 	wordTranslationRepo := wordTranslationRepository.New(dbConnect)
+	suggestionRepo := suggestionRepository.New(dbConnect)
 
 	authSer := authService.New(userRepo, tokenRepo)
 	langSer := languageService.New(langRepo, availableLangRepo)
 	voteSer := voteService.New(voteRepo, voiceRepo, voteOptionRepo)
 	wordTransSer := wordTranslationService.New(wordTranslationRepo)
+	suggestionSer := suggestionService.New(suggestionRepo)
 
 	authHand := authHandler.New(authSer)
 	langHand := languageHandler.New(langSer)
 	voteHand := voteHandler.New(voteSer)
 	dictionaryHand := dictionaryHandler.New(wordTransSer)
+	suggestionHand := suggestionHandler.New(suggestionSer)
 
-	router.Post("/api/login", authHand.Login)
-	router.Post("/api/logout", authHand.Logout)
-	router.Post("/api/refresh", authHand.Refresh)
-	router.Post("/api/register", authHand.Register)
-	router.Post("/api/user", authHand.User)
+	router.Route("/api", func(r chi.Router) {
+		router.Post("/login", authHand.Login)
+		router.Post("/logout", authHand.Logout)
+		router.Post("/refresh", authHand.Refresh)
+		router.Post("/register", authHand.Register)
+		router.Post("/user", authHand.User)
+	})
 
-	router.Get("/api/languages", langHand.GetAllLanguages)
-	router.Get("/api/active-languages", langHand.GetAllActiveLanguages)
-	router.Get("/api/except-languages/{id}", langHand.GetExceptLanguages)
-	router.Get("/api/map-languages", langHand.GetLanguageMap)
-
-	router.Get("/api/votes", voteHand.GetAllVotes)
-	router.Get("/api/votes/{id}", voteHand.GetOne)
-	router.Post("/api/voices/{voteOptionId}", voteHand.GetAllVotes)
-	router.Post("/api/cancel-voices/{voteOptionId}", voteHand.GetAllVotes)
-
-	router.Get("/api/dictionary/{baseLanguageId}/language/{targetLanguageId}", dictionaryHand.Translate)
-
+	router.Route("/api", func(r chi.Router) {
+		r.Use(authMid.Handler)
+		r.Get("/languages", langHand.GetAllLanguages)
+		r.Get("/active-languages", langHand.GetAllActiveLanguages)
+		r.Get("/except-languages/{id}", langHand.GetExceptLanguages)
+		r.Get("/map-languages", langHand.GetLanguageMap)
+		r.Get("/votes", voteHand.GetAllVotes)
+		r.Get("/votes/{id}", voteHand.GetOne)
+		r.Post("/voices/{voteOptionId}", voteHand.GetAllVotes)
+		r.Post("/cancel-voices/{voteOptionId}", voteHand.GetAllVotes)
+		r.Get("/dictionary/{baseLanguageId}/language/{targetLanguageId}", dictionaryHand.Translate)
+		r.Post("/suggestions", suggestionHand.Create)
+	})
 	http.ListenAndServe(":6611", router)
 }
