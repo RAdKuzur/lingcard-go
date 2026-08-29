@@ -7,6 +7,6 @@ type Course struct {
 	WordTranslationID int       `gorm:"column:word_translation_id"`
 	UserID            int       `gorm:"column:user_id"`
 	Repeat            int       `gorm:"column:repeat"`
-	Status            string    `gorm:"column:status"`
+	Status            int       `gorm:"column:status"`
 	LastTimeRepeated  time.Time `gorm:"column:last_time_repeated"`
 }

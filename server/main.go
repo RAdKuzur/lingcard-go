@@ -11,6 +11,7 @@ import (
 	"lingcard-go/handlers/progressHandler"
 	"lingcard-go/handlers/reactionHandler"
 	"lingcard-go/handlers/suggestionHandler"
+	"lingcard-go/handlers/trainingHandler"
 	"lingcard-go/handlers/voteHandler"
 	"lingcard-go/helpers/database"
 	"lingcard-go/middlewares/authMiddleware"
@@ -82,6 +83,7 @@ func main() {
 	reactionHand := reactionHandler.New(reactionSer)
 	profileHand := profileHandler.New(userSer, courseSer)
 	progressHand := progressHandler.New(courseSer)
+	trainingHand := trainingHandler.New(courseSer)
 
 	router.Route("/api", func(r chi.Router) {
 		r.Post("/login", authHand.Login)
@@ -116,6 +118,10 @@ func main() {
 			r.Post("/cancel-voices/{voteOptionId}", voteHand.CancelVote)
 			r.Get("/dictionary/{baseLanguageId}/language/{targetLanguageId}", dictionaryHand.Translate)
 			r.Post("/suggestions", suggestionHand.Create)
+
+			r.Get("/teachable", trainingHand.Teachable)
+			r.Get("/training", trainingHand.NewWord)
+			r.Patch("/training/{id}", trainingHand.RepeatWord)
 
 			r.Get("/progress/{status}", progressHand.Progress)
 			r.Delete("/progress", progressHand.ClearProgress)
