@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"lingcard-go/dto/request"
+	"lingcard-go/helpers/response"
 	"lingcard-go/services/authService"
 	"net/http"
 	"os"
@@ -43,6 +44,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	User := h.authService.GetAuthUser(credentials.Name, credentials.Password)
 	accessCookie := &http.Cookie{
 		Name:     "access_token",
 		Value:    tokens.AccessToken,
@@ -62,10 +64,17 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	}
+
+	Response := map[string]interface{}{
+		"success": true,
+		"user":    User,
+	}
+
 	http.SetCookie(w, accessCookie)
 	http.SetCookie(w, refreshCookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(Response)
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
@@ -100,6 +109,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, refreshCookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -145,8 +155,16 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, accessCookie)
 	http.SetCookie(w, refreshCookie)
+	Response := map[string]interface{}{
+		"success": true,
+		"data": map[string]interface{}{
+			"status": true,
+		},
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(Response)
 }
 
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
@@ -187,30 +205,27 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, refreshCookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
 }
 
 func (h *AuthHandler) User(w http.ResponseWriter, r *http.Request) {
 	accessCookie, err := r.Cookie("access_token")
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	accessToken := accessCookie.Value
 	if accessToken == "" {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	authUserDTO, err := h.authService.User(accessToken)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(authUserDTO)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
 }

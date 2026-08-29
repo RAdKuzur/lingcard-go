@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"lingcard-go/dto/suggestion"
+	"lingcard-go/helpers/response"
 	"lingcard-go/services/suggestionService"
 	"net/http"
 )
@@ -35,4 +36,5 @@ func (h *SuggestionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	h.suggestionService.Create(ctx, dto)
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
 }

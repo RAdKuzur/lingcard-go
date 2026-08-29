@@ -18,16 +18,25 @@ func New(langService *languageService.LanguageService) *LanguageHandler {
 
 func (h *LanguageHandler) GetAllLanguages(w http.ResponseWriter, r *http.Request) {
 	var languages = h.langService.All()
+	response := map[string]interface{}{
+		"success": true,
+		"data":    languages,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(languages)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *LanguageHandler) GetAllActiveLanguages(w http.ResponseWriter, r *http.Request) {
 	var languages = h.langService.AllActive()
+	response := map[string]interface{}{
+		"success": true,
+		"data":    languages,
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(languages)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *LanguageHandler) GetExceptLanguages(w http.ResponseWriter, r *http.Request) {
@@ -38,14 +47,24 @@ func (h *LanguageHandler) GetExceptLanguages(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	var languages = h.langService.ExceptLanguage(languageID)
+	response := map[string]interface{}{
+		"success": true,
+		"data":    languages,
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(languages)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *LanguageHandler) GetLanguageMap(w http.ResponseWriter, r *http.Request) {
 	var languages = h.langService.Map()
+	response := map[string]interface{}{
+		"success": true,
+		"data": map[string]interface{}{
+			"map": languages,
+		},
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(languages)
+	json.NewEncoder(w).Encode(response)
 }

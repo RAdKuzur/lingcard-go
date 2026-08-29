@@ -5,6 +5,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"io"
 	"lingcard-go/dto/request"
+	"lingcard-go/helpers/response"
 	"lingcard-go/services/courseService"
 	"net/http"
 	"strconv"
@@ -23,9 +24,13 @@ func New(courseService *courseService.CourseService) *TrainingHandler {
 func (h *TrainingHandler) NewWord(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	word := h.courseService.NewWord(ctx)
+	Response := map[string]interface{}{
+		"success": true,
+		"data":    word,
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(word)
+	json.NewEncoder(w).Encode(Response)
 }
 
 func (h *TrainingHandler) RepeatWord(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +43,7 @@ func (h *TrainingHandler) RepeatWord(w http.ResponseWriter, r *http.Request) {
 	h.courseService.RepeatWord(ctx, id, status.Status)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
 }
 
 func (h *TrainingHandler) Teachable(w http.ResponseWriter, r *http.Request) {
@@ -45,9 +51,12 @@ func (h *TrainingHandler) Teachable(w http.ResponseWriter, r *http.Request) {
 	code, status := h.courseService.Teachable(ctx)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	response := map[string]interface{}{
-		"language": code,
-		"training": status,
+	Response := map[string]interface{}{
+		"success": true,
+		"data": map[string]interface{}{
+			"language": code,
+			"training": status,
+		},
 	}
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(Response)
 }

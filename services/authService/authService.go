@@ -182,3 +182,13 @@ func (s *AuthService) User(accessToken string) (request.AuthUserDTO, error) {
 		Role:     role,
 	}, err
 }
+
+func (s *AuthService) GetAuthUser(name, password string) request.AuthUserDTO {
+	User, _ := s.userRepository.GetUserByCredentials(name, password)
+	Role, _ := role.RoleDictionary{}.Get(User.Role)
+	var dto = request.AuthUserDTO{
+		Username: User.Name,
+		Role:     Role,
+	}
+	return dto
+}

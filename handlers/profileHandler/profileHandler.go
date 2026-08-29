@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"lingcard-go/dto/request"
+	"lingcard-go/helpers/response"
 	"lingcard-go/services/courseService"
 	"lingcard-go/services/userService"
 	"net/http"
@@ -22,9 +23,13 @@ func (h *ProfileHandler) Profile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	profile := h.userService.Profile(ctx)
+	Response := map[string]interface{}{
+		"success": true,
+		"data":    profile,
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(profile)
+	json.NewEncoder(w).Encode(Response)
 }
 
 func (h *ProfileHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -36,4 +41,5 @@ func (h *ProfileHandler) Update(w http.ResponseWriter, r *http.Request) {
 	h.courseService.ClearProgress(ctx)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
 }

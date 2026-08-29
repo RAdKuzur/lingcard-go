@@ -6,6 +6,7 @@ import (
 	"io"
 	"lingcard-go/dto/post"
 	"lingcard-go/dto/request"
+	"lingcard-go/helpers/response"
 	"lingcard-go/services/postService"
 	"net/http"
 	"strconv"
@@ -25,9 +26,14 @@ func (h *PostHandler) GetPostsByCode(w http.ResponseWriter, r *http.Request) {
 		code = "en"
 	}
 	posts := h.postService.GetPostsByCode(code)
+
+	Response := map[string]interface{}{
+		"success": true,
+		"data":    posts,
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(w).Encode(Response)
 
 }
 
@@ -39,10 +45,15 @@ func (h *PostHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := strconv.Atoi(postId)
 	ctx := r.Context()
-	post := h.postService.GetOne(ctx, id)
+	Post := h.postService.GetOne(ctx, id)
+	Response := map[string]interface{}{
+		"success": true,
+		"data":    Post,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(post)
+	json.NewEncoder(w).Encode(Response)
 
 }
 
@@ -60,7 +71,7 @@ func (h *PostHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	h.postService.CreateComment(ctx, id, requestDTO.Text)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-
+	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
 }
 
 func (h *PostHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -71,6 +82,7 @@ func (h *PostHandler) Create(w http.ResponseWriter, r *http.Request) {
 	h.postService.Create(ctx, requestDTO)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
 }
 
 func (h *PostHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
@@ -84,5 +96,5 @@ func (h *PostHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	h.postService.DeleteComment(ctx, id)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-
+	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
 }

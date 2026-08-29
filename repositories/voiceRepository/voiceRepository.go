@@ -46,5 +46,5 @@ func (r *VoiceRepository) DeleteVoice(userID int, voteOptionID int) {
 }
 
 func (r *VoiceRepository) Insert(dto voiceDTO.VoiceDTO) {
-	r.db.Exec("INSERT INTO voices (vote_option_id, user_id, time)", dto.VoteOptionID, dto.UserID, dto.Time)
+	r.db.Exec("INSERT INTO voices (vote_option_id, user_id, time) VALUES (?, ?, ?)", dto.VoteOptionID, dto.UserID, dto.Time)
 }

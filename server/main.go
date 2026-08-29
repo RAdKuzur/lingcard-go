@@ -15,6 +15,7 @@ import (
 	"lingcard-go/handlers/voteHandler"
 	"lingcard-go/helpers/database"
 	"lingcard-go/middlewares/authMiddleware"
+	"lingcard-go/middlewares/corsMiddleware"
 	"lingcard-go/repositories/availableLanguageRepository"
 	"lingcard-go/repositories/commentRepository"
 	"lingcard-go/repositories/courseRepository"
@@ -45,7 +46,7 @@ func main() {
 	db := database.New()
 	dbConnect := db.Connect()
 	authMid := authMiddleware.New(dbConnect)
-
+	corsMid := corsMiddleware.New()
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
@@ -72,7 +73,7 @@ func main() {
 	postSer := postService.New(postRepo, langRepo, reactionRepo, commentRepo, userRepo)
 	reactionSer := reactionService.New(reactionRepo, postRepo)
 	userSer := userService.New(userRepo, courseRepo, wordTranslationRepo)
-	courseSer := courseService.New(courseRepo, wordTranslationRepo, wordRepo)
+	courseSer := courseService.New(courseRepo, wordTranslationRepo, wordRepo, langRepo)
 
 	authHand := authHandler.New(authSer)
 	langHand := languageHandler.New(langSer)
@@ -86,12 +87,16 @@ func main() {
 	trainingHand := trainingHandler.New(courseSer)
 
 	router.Route("/api", func(r chi.Router) {
+		r.Use(corsMid.Handle)
 		r.Post("/login", authHand.Login)
-		r.Post("/logout", authHand.Logout)
+
 		r.Post("/refresh", authHand.Refresh)
 		r.Post("/register", authHand.Register)
 		r.Post("/user", authHand.User)
-
+		r.Get("/languages", langHand.GetAllLanguages)
+		r.Get("/active-languages", langHand.GetAllActiveLanguages)
+		r.Get("/except-languages/{id}", langHand.GetExceptLanguages)
+		r.Get("/map-languages", langHand.GetLanguageMap)
 		r.Get("/posts/{code}", postHand.GetPostsByCode)
 		r.Get("/posts", postHand.GetPostsByCode)
 
@@ -107,11 +112,7 @@ func main() {
 			r.Post("/unset-reactions/{postId}", reactionHand.Unset)
 
 			r.Post("/logout", authHand.Logout)
-			r.Post("/user", authHand.User)
-			r.Get("/languages", langHand.GetAllLanguages)
-			r.Get("/active-languages", langHand.GetAllActiveLanguages)
-			r.Get("/except-languages/{id}", langHand.GetExceptLanguages)
-			r.Get("/map-languages", langHand.GetLanguageMap)
+
 			r.Get("/votes", voteHand.GetAllVotes)
 			r.Get("/votes/{id}", voteHand.GetOne)
 			r.Post("/voices/{voteOptionId}", voteHand.Vote)
