@@ -37,8 +37,9 @@ func (h *ProfileHandler) Update(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	json.Unmarshal(body, &requestDTO)
 	ctx := r.Context()
-	h.userService.Update(ctx, requestDTO)
+
 	h.courseService.ClearProgress(ctx)
+	h.userService.Update(ctx, requestDTO)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response.CreateSuccessResponse())

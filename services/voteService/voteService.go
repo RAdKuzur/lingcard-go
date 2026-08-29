@@ -72,8 +72,8 @@ func (s *VoteService) GetOne(ctx context.Context, id int) voice.VoteDTO {
 
 func (s *VoteService) Vote(ctx context.Context, id int) {
 	User := ctx.Value("User").(user.User)
-	Vote := s.voteRepo.Find(id)
-	VoteOptions := s.voteOptionRepo.FindByVoteId(Vote.ID)
+	Vote := s.voteOptionRepo.Find(id)
+	VoteOptions := s.voteOptionRepo.FindByVoteId(Vote.VoteID)
 	VoteOptionsId := make([]int, len(VoteOptions))
 	for i := 0; i < len(VoteOptions); i++ {
 		VoteOptionsId[i] = VoteOptions[i].ID
@@ -88,6 +88,6 @@ func (s *VoteService) Vote(ctx context.Context, id int) {
 }
 
 func (s *VoteService) CancelVote(ctx context.Context, id int) {
-	User := ctx.Value("user").(user.User)
+	User := ctx.Value("User").(user.User)
 	s.voiceRepo.DeleteVoice(User.ID, id)
 }

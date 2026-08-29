@@ -71,14 +71,14 @@ func (r *CourseRepository) Update(id int, dto courseDTO.CourseDTO) {
 	r.db.Exec("UPDATE courses SET (repeat, status, last_time_repeated) VALUES (?, ?, ?) WHERE id = ?", dto.Repeat, dto.Status, dto.LastTimeRepeated, id)
 }
 
-func (r *CourseRepository) ExtendedUpdate(id int, dto courseDTO.ExtendedCourseDTO) {
-	r.db.Exec("UPDATE courses SET (word_translation_id, user_id, repeat, status, last_time_repeated) VALUES (?, ?, ?, ?, ?)  WHERE id = ?",
-		dto.WordTranslationID, dto.UserID, dto.Repeat, dto.Status, dto.LastTimeRepeated, id)
+func (r *CourseRepository) ExtendedInsert(dto courseDTO.ExtendedCourseDTO) {
+	r.db.Exec("INSERT INTO courses (word_translation_id, user_id, repeat, status, last_time_repeated) VALUES (?, ?, ?, ?, ?)",
+		dto.WordTranslationID, dto.UserID, dto.Repeat, dto.Status, dto.LastTimeRepeated)
 }
 
 func (r *CourseRepository) CountRepeatedWords(userID int) int {
 	var count int
-	r.db.Exec("SELECT COUNT(*) FROM courses WHERE user_id = ? AND status = ? AND last_time_repeated < ?", userID, word.LEARNING, time.Now()).Scan(&count)
+	r.db.Raw("SELECT COUNT(*) FROM courses WHERE user_id = ? AND status = ? AND last_time_repeated < ?", userID, word.LEARNING, time.Now()).Scan(&count)
 	return count
 }
 

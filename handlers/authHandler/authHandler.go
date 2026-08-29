@@ -209,23 +209,28 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) User(w http.ResponseWriter, r *http.Request) {
-	accessCookie, err := r.Cookie("access_token")
+	refreshCookie, err := r.Cookie("refresh_token")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	accessToken := accessCookie.Value
-	if accessToken == "" {
+	refreshToken := refreshCookie.Value
+	if refreshToken == "" {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	authUserDTO, err := h.authService.User(accessToken)
+	authUserDTO, err := h.authService.User(refreshToken)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	Response := map[string]interface{}{
+		"success": true,
+		"data":    authUserDTO,
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(authUserDTO)
+	err = json.NewEncoder(w).Encode(Response)
 }

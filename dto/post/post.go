@@ -6,7 +6,7 @@ type SimplePostDTO struct {
 	ID            int    `json:"id"`
 	Content       string `json:"content"`
 	Date          string `json:"date"`
-	Title         string `json:"time"`
+	Title         string `json:"title"`
 	Code          string `json:"code"`
 	Username      string `json:"username"`
 	Address       string `json:"address"`
@@ -20,7 +20,7 @@ type PostDTO struct {
 	ID            int          `json:"id"`
 	Content       string       `json:"content"`
 	Date          string       `json:"date"`
-	Title         string       `json:"time"`
+	Title         string       `json:"title"`
 	Code          string       `json:"code"`
 	Username      string       `json:"username"`
 	Address       string       `json:"address"`

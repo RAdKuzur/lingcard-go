@@ -3,6 +3,7 @@ package authMiddleware
 import (
 	"context"
 	"gorm.io/gorm"
+	"lingcard-go/helpers/auth"
 	"lingcard-go/models/token"
 	"lingcard-go/models/user"
 	"net/http"
@@ -20,6 +21,15 @@ func (m *AuthMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		refreshCookie, err := r.Cookie("refresh_token")
 		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		accessCookie, err := r.Cookie("access_token")
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if accessCookie.Value == "" && auth.IsTokenValid(accessCookie.Value) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

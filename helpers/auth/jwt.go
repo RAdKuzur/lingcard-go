@@ -52,6 +52,14 @@ func GenerateRefreshToken(name string) (string, error) {
 	return token.SignedString(secretKey)
 }
 
+func IsTokenValid(tokenString string) bool {
+	_, err := ParseToken(tokenString)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 func ParseToken(tokenString string) (jwt.MapClaims, error) {
 
 	if err := godotenv.Load(); err != nil {

@@ -64,7 +64,7 @@ func (s *PostService) GetPostsByCode(code string) []post.SimplePostDTO {
 }
 
 func (s *PostService) GetOne(ctx context.Context, id int) post.PostDTO {
-	var commentsDTO []post.CommentDTO
+	commentsDTO := make([]post.CommentDTO, 0)
 	User := ctx.Value("User").(user.User)
 	Post := s.postRepository.Find(id)
 	isLiked := s.reactionRepository.IsLiked(User.ID, Post.ID)

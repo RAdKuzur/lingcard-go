@@ -42,7 +42,7 @@ func (s *CourseService) ClearWordProgress(courseID int) {
 }
 
 func (s *CourseService) WordsByStatus(ctx context.Context, status, page, limit int, search string) ([]wordProgressDTO.WordProgressDTO, int) {
-	var data []wordProgressDTO.WordProgressDTO
+	var data = make([]wordProgressDTO.WordProgressDTO, 0)
 	var amountWords int = 0
 	User := ctx.Value("User").(user.User)
 	switch status {
@@ -183,7 +183,7 @@ func (s *CourseService) RepeatWord(ctx context.Context, id int, status bool) {
 				Status:            word.LEARNED,
 				LastTimeRepeated:  Repeat(0),
 			}
-			s.courseRepository.ExtendedUpdate(course.ID, dto)
+			s.courseRepository.ExtendedInsert(dto)
 		} else {
 			dto := courseDTO.ExtendedCourseDTO{
 				WordTranslationID: id,
@@ -192,7 +192,7 @@ func (s *CourseService) RepeatWord(ctx context.Context, id int, status bool) {
 				Status:            word.LEARNING,
 				LastTimeRepeated:  Repeat(0),
 			}
-			s.courseRepository.ExtendedUpdate(course.ID, dto)
+			s.courseRepository.ExtendedInsert(dto)
 		}
 	}
 }

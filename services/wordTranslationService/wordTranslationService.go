@@ -20,7 +20,7 @@ func New(wordTranslationRepository *wordTranslationRepository.WordTranslationRep
 }
 
 func (s *WordTranslationService) Translate(baseLangId, targetLangId, page, limit int, search string) []translation.WordTranslationDTO {
-	var result []translation.WordTranslationDTO
+	var result = make([]translation.WordTranslationDTO, 0)
 	items := s.wordTranslationRepository.GetPaginateByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, page, limit, search)
 	for _, item := range items {
 		word := s.wordRepository.Find(item.WordID)

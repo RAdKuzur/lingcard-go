@@ -39,7 +39,7 @@ func (s *AuthService) Login(name, password string, r *http.Request) (token.Token
 		return token.TokenDTO{
 			AccessToken:  "",
 			RefreshToken: "",
-		}, err
+		}, errors.New("not valid credentials")
 	}
 	User, err := s.userRepository.GetUserByCredentials(name, password)
 	if err != nil {
@@ -158,8 +158,8 @@ func (s *AuthService) Register(dto request.RegisterDTO, r *http.Request) (token.
 	}, errors.New("not unique username")
 }
 
-func (s *AuthService) User(accessToken string) (request.AuthUserDTO, error) {
-	claims, err := auth.ParseToken(accessToken)
+func (s *AuthService) User(refreshToken string) (request.AuthUserDTO, error) {
+	claims, err := auth.ParseToken(refreshToken)
 	if err != nil {
 		return request.AuthUserDTO{
 			Username: "",
