@@ -15,28 +15,26 @@ func New(db *gorm.DB) *LanguageRepository {
 	}
 }
 
-func (r *LanguageRepository) All() []language.Language {
+func (r *LanguageRepository) All() ([]language.Language, error) {
 	var languages []language.Language
-	_ = r.db.Find(&languages).Error
-	return languages
+	err := r.db.Raw("SELECT * FROM languages").Scan(&languages).Error
+	return languages, err
 }
 
-func (r *LanguageRepository) AllActive() []language.Language {
+func (r *LanguageRepository) AllActive() ([]language.Language, error) {
 	var languages []language.Language
-	_ = r.db.Preload("BaseLanguages.TargetLanguage").
-		Where("is_active = ?", true).
-		Find(&languages).Error
-	return languages
+	err := r.db.Raw("SELECT * FROM languages WHERE is_active = ?", true).Scan(&languages).Error
+	return languages, err
 }
 
-func (r *LanguageRepository) FindByCode(code string) language.Language {
-	var Language language.Language
-	_ = r.db.First(&Language, "code = ?", code).Error
-	return Language
+func (r *LanguageRepository) FindByCode(code string) (language.Language, error) {
+	var lang language.Language
+	err := r.db.Raw("SELECT * FROM languages WHERE code = ?", code).Scan(&lang).Error
+	return lang, err
 }
 
-func (r *LanguageRepository) Find(id int) language.Language {
-	var Language language.Language
-	_ = r.db.First(&Language, "id = ?", id).Error
-	return Language
+func (r *LanguageRepository) Find(id int) (language.Language, error) {
+	var lang language.Language
+	err := r.db.Raw("SELECT * FROM languages WHERE id = ?", id).Scan(&lang).Error
+	return lang, err
 }

@@ -20,14 +20,18 @@ func New(voteService *voteService.VoteService) *VoteHandler {
 }
 
 func (h *VoteHandler) GetAllVotes(w http.ResponseWriter, r *http.Request) {
-	votes := h.voteService.All()
-	Response := map[string]interface{}{
+	votes, err := h.voteService.All()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp := map[string]interface{}{
 		"success": true,
 		"data":    votes,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(Response)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *VoteHandler) GetOne(w http.ResponseWriter, r *http.Request) {
@@ -36,17 +40,19 @@ func (h *VoteHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	id, _ := strconv.Atoi(voteId)
-
 	ctx := r.Context()
-
-	vote := h.voteService.GetOne(ctx, id)
-	Response := map[string]interface{}{
+	vote, err := h.voteService.GetOne(ctx, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp := map[string]interface{}{
 		"success": true,
 		"data":    vote,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(Response)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *VoteHandler) Vote(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +62,11 @@ func (h *VoteHandler) Vote(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := strconv.Atoi(voteId)
 	ctx := r.Context()
-	h.voteService.Vote(ctx, id)
+	err := h.voteService.Vote(ctx, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
@@ -69,7 +79,11 @@ func (h *VoteHandler) CancelVote(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := strconv.Atoi(voteId)
 	ctx := r.Context()
-	h.voteService.CancelVote(ctx, id)
+	err := h.voteService.CancelVote(ctx, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response.CreateSuccessResponse())

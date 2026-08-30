@@ -26,7 +26,11 @@ func (h *ReactionHandler) Like(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := strconv.Atoi(postId)
 	ctx := r.Context()
-	h.reactionService.Like(ctx, id)
+	err := h.reactionService.Like(ctx, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
@@ -39,7 +43,11 @@ func (h *ReactionHandler) Dislike(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := strconv.Atoi(postId)
 	ctx := r.Context()
-	h.reactionService.Dislike(ctx, id)
+	err := h.reactionService.Dislike(ctx, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
@@ -52,7 +60,11 @@ func (h *ReactionHandler) Unset(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := strconv.Atoi(postId)
 	ctx := r.Context()
-	h.reactionService.Unset(ctx, id)
+	err := h.reactionService.Unset(ctx, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response.CreateSuccessResponse())

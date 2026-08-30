@@ -15,8 +15,8 @@ func New(db *gorm.DB) *WordRepository {
 	}
 }
 
-func (r *WordRepository) Find(id int) word.Word {
+func (r *WordRepository) Find(id int) (word.Word, error) {
 	var item word.Word
-	r.db.Raw("SELECT * FROM words WHERE id = ?", id).Scan(&item)
-	return item
+	err := r.db.Raw("SELECT * FROM words WHERE id = ?", id).Scan(&item).Error
+	return item, err
 }

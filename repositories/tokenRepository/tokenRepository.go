@@ -28,13 +28,14 @@ func (r *TokenRepository) CreateToken(refreshToken string, userId int, ip string
 		IsRevoked:    false,
 		ExpiresAt:    time.Now().Add(time.Minute * time.Duration(minutes)).String(),
 	}
-	err := r.db.Create(&item).Error
+	err := r.db.Exec("INSERT INTO tokens (refresh_token, user_agent, user_id, ip_address, is_revoked, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
+		item.RefreshToken, item.UserAgent, item.UserID, item.IPAddress, item.IsRevoked, item.ExpiresAt).Error
 	return err
 }
 
 func (r *TokenRepository) GetByRefreshToken(refreshToken string) (token.Token, error) {
 	var item token.Token
-	err := r.db.Where("refresh_token = ?", refreshToken).First(&item).Error
+	err := r.db.Raw("SELECT * FROM tokens WHERE refresh_token = ?", refreshToken).Scan(&item).Error
 	if err != nil {
 		return item, err
 	}
@@ -42,6 +43,6 @@ func (r *TokenRepository) GetByRefreshToken(refreshToken string) (token.Token, e
 }
 
 func (r *TokenRepository) Delete(id int) error {
-	err := r.db.Where("id = ?", id).Delete(&token.Token{}).Error
+	err := r.db.Exec("DELETE FROM tokens WHERE id = ?", id).Error
 	return err
 }

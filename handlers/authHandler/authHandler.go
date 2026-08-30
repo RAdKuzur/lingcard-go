@@ -32,6 +32,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
 	err = json.Unmarshal(body, &credentials)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -44,7 +45,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	User := h.authService.GetAuthUser(credentials.Name, credentials.Password)
+	usr, err2 := h.authService.GetAuthUser(credentials.Name, credentials.Password)
+	if err2 != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	accessCookie := &http.Cookie{
 		Name:     "access_token",
 		Value:    tokens.AccessToken,
@@ -67,7 +72,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	Response := map[string]interface{}{
 		"success": true,
-		"user":    User,
+		"user":    usr,
 	}
 
 	http.SetCookie(w, accessCookie)
@@ -122,14 +127,15 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
 	err = json.Unmarshal(body, &credentials)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	tokens, err := h.authService.Register(credentials, r)
-	if err != nil {
+	tokens, err2 := h.authService.Register(credentials, r)
+	if err2 != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -155,7 +161,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, accessCookie)
 	http.SetCookie(w, refreshCookie)
-	Response := map[string]interface{}{
+	resp := map[string]interface{}{
 		"success": true,
 		"data": map[string]interface{}{
 			"status": true,
@@ -164,7 +170,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(Response)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
@@ -176,8 +182,8 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := h.authService.Refresh(refreshCookie.Value, r)
-	if err != nil {
+	tokens, err2 := h.authService.Refresh(refreshCookie.Value, r)
+	if err2 != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -226,11 +232,11 @@ func (h *AuthHandler) User(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Response := map[string]interface{}{
+	resp := map[string]interface{}{
 		"success": true,
 		"data":    authUserDTO,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(Response)
+	json.NewEncoder(w).Encode(resp)
 }

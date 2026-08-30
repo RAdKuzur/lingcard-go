@@ -38,21 +38,29 @@ func (h *ProgressHandler) Progress(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	words, count := h.courseService.WordsByStatus(ctx, status, page, limit, search)
+	words, count, err1 := h.courseService.WordsByStatus(ctx, status, page, limit, search)
+	if err1 != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	Response := map[string]interface{}{
+	resp := map[string]interface{}{
 		"success":     true,
 		"data":        words,
 		"amountWords": count,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(Response)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *ProgressHandler) ClearProgress(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	h.courseService.ClearProgress(ctx)
+	err := h.courseService.ClearProgress(ctx)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response.CreateSuccessResponse())
@@ -65,7 +73,12 @@ func (h *ProgressHandler) ClearWordProgress(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	id, _ := strconv.Atoi(courseId)
-	h.courseService.ClearWordProgress(id)
+
+	err := h.courseService.ClearWordProgress(id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

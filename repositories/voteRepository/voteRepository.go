@@ -15,14 +15,14 @@ func New(db *gorm.DB) *VoteRepository {
 	}
 }
 
-func (r *VoteRepository) All() []voice.Vote {
+func (r *VoteRepository) All() ([]voice.Vote, error) {
 	var votes []voice.Vote
-	r.db.Raw("SELECT * FROM votes").Scan(&votes)
-	return votes
+	err := r.db.Raw("SELECT * FROM votes").Scan(&votes).Error
+	return votes, err
 }
 
-func (r *VoteRepository) Find(id int) voice.Vote {
-	var Vote voice.Vote
-	r.db.Raw("SELECT * FROM votes WHERE id = ?", id).Scan(&Vote)
-	return Vote
+func (r *VoteRepository) Find(id int) (voice.Vote, error) {
+	var item voice.Vote
+	err := r.db.Raw("SELECT * FROM votes WHERE id = ?", id).Scan(&item).Error
+	return item, err
 }

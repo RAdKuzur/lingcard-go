@@ -17,48 +17,64 @@ func New(langService *languageService.LanguageService) *LanguageHandler {
 }
 
 func (h *LanguageHandler) GetAllLanguages(w http.ResponseWriter, r *http.Request) {
-	var languages = h.langService.All()
-	response := map[string]interface{}{
+	var languages, err = h.langService.All()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp := map[string]interface{}{
 		"success": true,
 		"data":    languages,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *LanguageHandler) GetAllActiveLanguages(w http.ResponseWriter, r *http.Request) {
-	var languages = h.langService.AllActive()
-	response := map[string]interface{}{
+	var languages, err = h.langService.AllActive()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp := map[string]interface{}{
 		"success": true,
 		"data":    languages,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *LanguageHandler) GetExceptLanguages(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	languageID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	var languages = h.langService.ExceptLanguage(languageID)
-	response := map[string]interface{}{
+	languages, err2 := h.langService.ExceptLanguage(languageID)
+	if err2 != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp := map[string]interface{}{
 		"success": true,
 		"data":    languages,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *LanguageHandler) GetLanguageMap(w http.ResponseWriter, r *http.Request) {
-	var languages = h.langService.Map()
-	response := map[string]interface{}{
+	var languages, err = h.langService.Map()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp := map[string]interface{}{
 		"success": true,
 		"data": map[string]interface{}{
 			"map": languages,
@@ -66,5 +82,5 @@ func (h *LanguageHandler) GetLanguageMap(w http.ResponseWriter, r *http.Request)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(resp)
 }

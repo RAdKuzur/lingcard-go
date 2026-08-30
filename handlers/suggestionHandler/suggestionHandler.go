@@ -33,7 +33,11 @@ func (h *SuggestionHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	h.suggestionService.Create(ctx, dto)
+	err1 := h.suggestionService.Create(ctx, dto)
+	if err1 != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response.CreateSuccessResponse())

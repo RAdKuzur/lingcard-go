@@ -19,25 +19,33 @@ func New(wordTranslationRepository *wordTranslationRepository.WordTranslationRep
 	}
 }
 
-func (s *WordTranslationService) Translate(baseLangId, targetLangId, page, limit int, search string) []translation.WordTranslationDTO {
+func (s *WordTranslationService) Translate(baseLangId, targetLangId, page, limit int, search string) ([]translation.WordTranslationDTO, error) {
 	var result = make([]translation.WordTranslationDTO, 0)
-	items := s.wordTranslationRepository.GetPaginateByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, page, limit, search)
+	items, err := s.wordTranslationRepository.GetPaginateByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, page, limit, search)
+	if err != nil {
+		return result, err
+	}
 	for _, item := range items {
-		word := s.wordRepository.Find(item.WordID)
-		Level, _ := level.LevelDictionary{}.Get(word.Level)
+		word, err1 := s.wordRepository.Find(item.WordID)
+		if err1 != nil {
+			return result, err1
+		}
+		lvl := level.LevelDictionary{}.Get(word.Level)
 		result = append(result, translation.WordTranslationDTO{
 			ID:            item.ID,
 			Translation:   item.Translation,
 			Text:          word.Text,
 			Transcription: word.Transcription,
-			Level:         Level,
+			Level:         lvl,
 		})
 	}
-	return result
+	return result, err
 }
 
-func (s *WordTranslationService) CountWords(baseLangId, targetLangId int, search string) int {
-	var count int
-	count = s.wordTranslationRepository.CountByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, search)
-	return count
+func (s *WordTranslationService) CountWords(baseLangId, targetLangId int, search string) (int, error) {
+	count, err := s.wordTranslationRepository.CountByTargetLanguageIdAndBaseLanguageId(baseLangId, targetLangId, search)
+	if err != nil {
+		return 0, err
+	}
+	return count, err
 }

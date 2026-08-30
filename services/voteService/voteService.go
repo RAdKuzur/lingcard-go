@@ -24,33 +24,52 @@ func New(voteRepo *voteRepository.VoteRepository, voiceRepo *voiceRepository.Voi
 	}
 }
 
-func (s *VoteService) All() []voice.SimpleVoteDTO {
-	var dto []voice.SimpleVoteDTO
-	votes := s.voteRepo.All()
+func (s *VoteService) All() ([]voice.SimpleVoteDTO, error) {
+	var dto = make([]voice.SimpleVoteDTO, 0)
+	votes, err := s.voteRepo.All()
+	if err != nil {
+		return dto, err
+	}
 	for _, vote := range votes {
+		count, err1 := s.voiceRepo.GetCountVoices(vote.ID)
+		if err1 != nil {
+			return dto, err1
+		}
 		dto = append(dto, voice.SimpleVoteDTO{
 			ID:      vote.ID,
 			Title:   vote.Title,
 			Content: vote.Content,
-			Voices:  s.voiceRepo.GetCountVoices(vote.ID),
+			Voices:  count,
 		})
 	}
-	return dto
+	return dto, err
 }
 
-func (s *VoteService) GetOne(ctx context.Context, id int) voice.VoteDTO {
-	User := ctx.Value("User").(user.User)
-	Vote := s.voteRepo.Find(id)
-	var voteOptionsDTO []voice.VoteOptionDTO
+func (s *VoteService) GetOne(ctx context.Context, id int) (voice.VoteDTO, error) {
 	var count = 0
-	VoteOptions := s.voteOptionRepo.FindByVoteId(Vote.ID)
-	VoteOptionsId := make([]int, len(VoteOptions))
-	for i := 0; i < len(VoteOptions); i++ {
-		VoteOptionsId[i] = VoteOptions[i].ID
+	var voteOptionsDTO []voice.VoteOptionDTO
+	usr := ctx.Value("User").(user.User)
+	vt, err := s.voteRepo.Find(id)
+	if err != nil {
+		return voice.VoteDTO{}, err
 	}
-	Voice := s.voiceRepo.FindUserVoice(User.ID, VoteOptionsId)
-	for _, item := range VoteOptions {
-		countVoices := s.voiceRepo.CountVoices(item.ID)
+	vtOptions, err1 := s.voteOptionRepo.FindByVoteId(vt.ID)
+	if err1 != nil {
+		return voice.VoteDTO{}, err1
+	}
+	vtOptionsId := make([]int, len(vtOptions))
+	for i := 0; i < len(vtOptions); i++ {
+		vtOptionsId[i] = vtOptions[i].ID
+	}
+	vc, err2 := s.voiceRepo.FindUserVoice(usr.ID, vtOptionsId)
+	if err2 != nil {
+		return voice.VoteDTO{}, err2
+	}
+	for _, item := range vtOptions {
+		countVoices, err3 := s.voiceRepo.CountVoices(item.ID)
+		if err3 != nil {
+			return voice.VoteDTO{}, err3
+		}
 		voteOptionsDTO = append(voteOptionsDTO, voice.VoteOptionDTO{
 			ID:      item.ID,
 			Title:   item.Title,
@@ -60,34 +79,51 @@ func (s *VoteService) GetOne(ctx context.Context, id int) voice.VoteDTO {
 
 	}
 	return voice.VoteDTO{
-		ID:          Vote.ID,
-		Title:       Vote.Title,
-		Content:     Vote.Content,
+		ID:          vt.ID,
+		Title:       vt.Title,
+		Content:     vt.Content,
 		VoteOptions: voteOptionsDTO,
 		TotalCount:  count,
-		IsActive:    Vote.IsActive,
-		Voted:       Voice.VoteOptionID,
-	}
+		IsActive:    vt.IsActive,
+		Voted:       vc.VoteOptionID,
+	}, err
 }
 
-func (s *VoteService) Vote(ctx context.Context, id int) {
-	User := ctx.Value("User").(user.User)
-	Vote := s.voteOptionRepo.Find(id)
-	VoteOptions := s.voteOptionRepo.FindByVoteId(Vote.VoteID)
-	VoteOptionsId := make([]int, len(VoteOptions))
-	for i := 0; i < len(VoteOptions); i++ {
-		VoteOptionsId[i] = VoteOptions[i].ID
+func (s *VoteService) Vote(ctx context.Context, id int) error {
+	usr := ctx.Value("User").(user.User)
+	vt, err := s.voteOptionRepo.Find(id)
+	if err != nil {
+		return err
 	}
-	s.voiceRepo.DeleteUserVoices(User.ID, VoteOptionsId)
+	vtOptions, err1 := s.voteOptionRepo.FindByVoteId(vt.VoteID)
+	if err1 != nil {
+		return err1
+	}
+	VoteOptionsId := make([]int, len(vtOptions))
+	for i := 0; i < len(vtOptions); i++ {
+		VoteOptionsId[i] = vtOptions[i].ID
+	}
+	err2 := s.voiceRepo.DeleteUserVoices(usr.ID, VoteOptionsId)
+	if err2 != nil {
+		return err2
+	}
 	var dto = voice.VoiceDTO{
 		VoteOptionID: id,
-		UserID:       User.ID,
+		UserID:       usr.ID,
 		Time:         time.Now(),
 	}
-	s.voiceRepo.Insert(dto)
+	err3 := s.voiceRepo.Insert(dto)
+	if err3 != nil {
+		return err3
+	}
+	return nil
 }
 
-func (s *VoteService) CancelVote(ctx context.Context, id int) {
-	User := ctx.Value("User").(user.User)
-	s.voiceRepo.DeleteVoice(User.ID, id)
+func (s *VoteService) CancelVote(ctx context.Context, id int) error {
+	usr := ctx.Value("User").(user.User)
+	err := s.voiceRepo.DeleteVoice(usr.ID, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

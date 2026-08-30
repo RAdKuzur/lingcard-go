@@ -16,7 +16,7 @@ func (r StatusPostDictionary) GetList() map[int]string {
 	}
 }
 
-func (r StatusPostDictionary) Get(index int) (string, bool) {
-	name, exists := r.GetList()[index]
-	return name, exists
+func (r StatusPostDictionary) Get(index int) string {
+	name, _ := r.GetList()[index]
+	return name
 }

@@ -16,6 +16,7 @@ func New(db *gorm.DB) *SuggestionRepository {
 	}
 }
 
-func (r *SuggestionRepository) Insert(dto suggestion.SuggestionDTO) {
-	r.db.Exec("INSERT INTO suggestions (message, date, user_id, status) VALUES (?, ?, ?, ?)", dto.Message, time.Now(), dto.UserID, false)
+func (r *SuggestionRepository) Insert(dto suggestion.SuggestionDTO) error {
+	err := r.db.Exec("INSERT INTO suggestions (message, date, user_id, status) VALUES (?, ?, ?, ?)", dto.Message, time.Now(), dto.UserID, false).Error
+	return err
 }

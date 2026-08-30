@@ -31,16 +31,24 @@ func (h *DictionaryHandler) Translate(w http.ResponseWriter, r *http.Request) {
 	if limit == 0 {
 		limit = 10
 	}
-	words := h.wordTranslationService.Translate(baseLangId, targetLangId, page, limit, search)
-	count := h.wordTranslationService.CountWords(baseLangId, targetLangId, search)
+	words, err := h.wordTranslationService.Translate(baseLangId, targetLangId, page, limit, search)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	count, err2 := h.wordTranslationService.CountWords(baseLangId, targetLangId, search)
+	if err2 != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	response := map[string]interface{}{
+	resp := map[string]interface{}{
 		"success":     true,
 		"data":        words,
 		"amountWords": count,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(resp)
 }

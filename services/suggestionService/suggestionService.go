@@ -15,8 +15,12 @@ func New(suggestionRepository *suggestionRepository.SuggestionRepository) *Sugge
 	return &SuggestionService{suggestionRepository: suggestionRepository}
 }
 
-func (s *SuggestionService) Create(ctx context.Context, dto suggestion.SuggestionDTO) {
+func (s *SuggestionService) Create(ctx context.Context, dto suggestion.SuggestionDTO) error {
 	ctxUser := ctx.Value("User").(user.User)
 	dto.UserID = ctxUser.ID
-	s.suggestionRepository.Insert(dto)
+	err := s.suggestionRepository.Insert(dto)
+	if err != nil {
+		return err
+	}
+	return nil
 }

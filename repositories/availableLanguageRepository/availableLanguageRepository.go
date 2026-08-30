@@ -15,15 +15,14 @@ func New(db *gorm.DB) *AvailableLanguageRepository {
 	}
 }
 
-func (r *AvailableLanguageRepository) All() []language.AvailableLanguage {
-	var languages []language.AvailableLanguage
-	_ = r.db.Find(&languages).Error
-	return languages
+func (r *AvailableLanguageRepository) FindAll() ([]language.AvailableLanguage, error) {
+	var items []language.AvailableLanguage
+	err := r.db.Raw("SELECT * FROM available_languages").Scan(&items).Error
+	return items, err
 }
 
-func (r *AvailableLanguageRepository) FindByBaseLanguageId(id int) []language.AvailableLanguage {
-	var l []language.AvailableLanguage
-	_ = r.db.Preload("TargetLanguage").
-		Where("base_language_id = ?", id).Find(&l)
-	return l
+func (r *AvailableLanguageRepository) FindByBaseLanguageId(id int) ([]language.AvailableLanguage, error) {
+	var items []language.AvailableLanguage
+	err := r.db.Raw("SELECT * FROM available_languages WHERE base_language_id = ?", id).Scan(&items).Error
+	return items, err
 }

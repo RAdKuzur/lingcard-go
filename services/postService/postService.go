@@ -35,24 +35,38 @@ func New(
 	}
 }
 
-func (s *PostService) GetPostsByCode(code string) []post.SimplePostDTO {
-	var postsDTO []post.SimplePostDTO
+func (s *PostService) GetPostsByCode(code string) ([]post.SimplePostDTO, error) {
+	var postsDTO = make([]post.SimplePostDTO, 0)
 
-	language := s.languageRepository.FindByCode(code)
-	posts := s.postRepository.FindApprovedPostsByLanguageId(language.Id)
-
+	language, err := s.languageRepository.FindByCode(code)
+	if err != nil {
+		return postsDTO, err
+	}
+	posts, err2 := s.postRepository.FindApprovedPostsByLanguageId(language.ID)
+	if err2 != nil {
+		return postsDTO, err2
+	}
 	for _, item := range posts {
-		likesCount := s.reactionRepository.CountLikes(item.ID)
-		dislikesCount := s.reactionRepository.CountDislikes(item.ID)
-		User, _ := s.userRepository.One(item.UserID)
-		status, _ := postDict.StatusPostDictionary{}.Get(item.Status)
+		likesCount, err3 := s.reactionRepository.CountLikes(item.ID)
+		if err3 != nil {
+			return postsDTO, err3
+		}
+		dislikesCount, err3 := s.reactionRepository.CountDislikes(item.ID)
+		if err3 != nil {
+			return postsDTO, err3
+		}
+		usr, err4 := s.userRepository.One(item.UserID)
+		if err4 != nil {
+			return postsDTO, err4
+		}
+		status := postDict.StatusPostDictionary{}.Get(item.Status)
 		postsDTO = append(postsDTO, post.SimplePostDTO{
 			ID:            item.ID,
 			Content:       item.Content,
 			Date:          item.Date.Format("2006-01-02 15:04:05"),
 			Title:         item.Title,
 			Code:          code,
-			Username:      User.Name,
+			Username:      usr.Name,
 			Address:       item.Address,
 			Status:        status,
 			ViewsCount:    item.ViewsCount,
@@ -60,73 +74,121 @@ func (s *PostService) GetPostsByCode(code string) []post.SimplePostDTO {
 			DislikesCount: dislikesCount,
 		})
 	}
-	return postsDTO
+	return postsDTO, nil
 }
 
-func (s *PostService) GetOne(ctx context.Context, id int) post.PostDTO {
+func (s *PostService) GetOne(ctx context.Context, id int) (post.PostDTO, error) {
 	commentsDTO := make([]post.CommentDTO, 0)
-	User := ctx.Value("User").(user.User)
-	Post := s.postRepository.Find(id)
-	isLiked := s.reactionRepository.IsLiked(User.ID, Post.ID)
-	isDisliked := s.reactionRepository.IsDisliked(User.ID, Post.ID)
-	likesCount := s.reactionRepository.CountLikes(User.ID)
-	dislikesCount := s.reactionRepository.CountDislikes(User.ID)
-	comments := s.commentRepository.GetAllComments(id)
+	usr := ctx.Value("User").(user.User)
+	pst, err := s.postRepository.Find(id)
+	if err != nil {
+		return post.PostDTO{}, err
+	}
+	pstUser, errUser := s.userRepository.One(pst.UserID)
+	if errUser != nil {
+		return post.PostDTO{}, errUser
+	}
+	isLiked, err2 := s.reactionRepository.IsLiked(usr.ID, pst.ID)
+	if err2 != nil {
+		return post.PostDTO{}, err2
+	}
+	isDisliked, err3 := s.reactionRepository.IsDisliked(usr.ID, pst.ID)
+	if err3 != nil {
+		return post.PostDTO{}, err3
+	}
+	likesCount, err4 := s.reactionRepository.CountLikes(usr.ID)
+	if err4 != nil {
+		return post.PostDTO{}, err4
+	}
+	dislikesCount, err5 := s.reactionRepository.CountDislikes(usr.ID)
+	if err5 != nil {
+		return post.PostDTO{}, err5
+	}
+	comments, err6 := s.commentRepository.GetAllComments(id)
+	if err6 != nil {
+		return post.PostDTO{}, err6
+	}
 	for _, comment := range comments {
-		User, _ := s.userRepository.One(comment.UserID)
-		Language := s.languageRepository.Find(User.BaseLanguageID)
+		usr2, err7 := s.userRepository.One(comment.UserID)
+		if err7 != nil {
+			return post.PostDTO{}, err7
+		}
+		lang, err8 := s.languageRepository.Find(usr2.BaseLanguageID)
+		if err8 != nil {
+			return post.PostDTO{}, err8
+		}
 		commentsDTO = append(commentsDTO, post.CommentDTO{
 			ID:           comment.ID,
 			Text:         comment.Text,
-			Username:     User.Name,
+			Username:     usr2.Name,
 			Time:         comment.Time.Format("2006-01-02 15:04:05"),
 			IsFixed:      comment.IsFixed,
-			LanguageCode: Language.Code,
+			LanguageCode: lang.Code,
 		})
 	}
-	s.postRepository.IncrementViewsCount(id)
-	status, _ := postDict.StatusPostDictionary{}.Get(Post.Status)
-	languagePost := s.languageRepository.Find(Post.LanguageID)
+	err9 := s.postRepository.IncrementViewsCount(id)
+	if err9 != nil {
+		return post.PostDTO{}, err9
+	}
+	status := postDict.StatusPostDictionary{}.Get(pst.Status)
+	languagePost, err10 := s.languageRepository.Find(pst.LanguageID)
+	if err10 != nil {
+		return post.PostDTO{}, err10
+	}
 	postDTO := post.PostDTO{
-		ID:            Post.ID,
-		Content:       Post.Content,
-		Date:          Post.Date.Format("2006-01-02 15:04:05"),
-		Title:         Post.Title,
+		ID:            pst.ID,
+		Content:       pst.Content,
+		Date:          pst.Date.Format("2006-01-02 15:04:05"),
+		Title:         pst.Title,
 		Code:          languagePost.Code,
-		Username:      User.Name,
-		Address:       Post.Address,
+		Username:      pstUser.Name,
+		Address:       pst.Address,
 		Status:        status,
-		ViewsCount:    Post.ViewsCount,
+		ViewsCount:    pst.ViewsCount,
 		LikesCount:    likesCount,
 		DislikesCount: dislikesCount,
 		IsLiked:       isLiked,
 		IsDisliked:    isDisliked,
 		Comments:      commentsDTO,
 	}
-	return postDTO
+	return postDTO, nil
 }
 
-func (s *PostService) CreateComment(ctx context.Context, postId int, text string) {
-
-	User := ctx.Value("User").(user.User)
+func (s *PostService) CreateComment(ctx context.Context, postId int, text string) error {
+	usr := ctx.Value("User").(user.User)
 	var commentDTO = post.CreateCommentDTO{
 		PostID: postId,
-		UserID: User.ID,
+		UserID: usr.ID,
 		Text:   text,
 	}
-	s.commentRepository.Insert(commentDTO)
-}
-
-func (s *PostService) Create(ctx context.Context, dto post.CreatePostDTO) {
-	User := ctx.Value("User").(user.User)
-	dto.UserID = User.ID
-	s.postRepository.Insert(dto)
-}
-
-func (s *PostService) DeleteComment(ctx context.Context, postId int) {
-	User := ctx.Value("User").(user.User)
-	Comment := s.commentRepository.Find(postId)
-	if User.ID == Comment.UserID {
-		s.commentRepository.Delete(postId)
+	err := s.commentRepository.Insert(commentDTO)
+	if err != nil {
+		return err
 	}
+	return nil
+}
+
+func (s *PostService) Create(ctx context.Context, dto post.CreatePostDTO) error {
+	usr := ctx.Value("User").(user.User)
+	dto.UserID = usr.ID
+	err := s.postRepository.Insert(dto)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *PostService) DeleteComment(ctx context.Context, postId int) error {
+	usr := ctx.Value("User").(user.User)
+	comm, err := s.commentRepository.Find(postId)
+	if err != nil {
+		return err
+	}
+	if usr.ID == comm.UserID {
+		err2 := s.commentRepository.Delete(postId)
+		if err2 != nil {
+			return err2
+		}
+	}
+	return nil
 }

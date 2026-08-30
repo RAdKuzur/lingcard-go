@@ -18,9 +18,12 @@ func New(langRepo *languageRepository.LanguageRepository, availableLangRepo *ava
 	}
 }
 
-func (s *LanguageService) All() []language.LangDTO {
-	var langDTO []language.LangDTO
-	var languages = s.langRepository.All()
+func (s *LanguageService) All() ([]language.LangDTO, error) {
+	var langDTO = make([]language.LangDTO, 0)
+	languages, err := s.langRepository.All()
+	if err != nil {
+		return nil, err
+	}
 	for _, l := range languages {
 		var item = language.LangDTO{
 			Name: l.Name,
@@ -28,16 +31,27 @@ func (s *LanguageService) All() []language.LangDTO {
 		}
 		langDTO = append(langDTO, item)
 	}
-	return langDTO
+	return langDTO, err
 }
 
-func (s *LanguageService) Map() []language.LangMapDTO {
-	var langMapDTO []language.LangMapDTO
-	var languages = s.langRepository.AllActive()
+func (s *LanguageService) Map() ([]language.LangMapDTO, error) {
+	var langMapDTO = make([]language.LangMapDTO, 0)
+	var languages, err = s.langRepository.AllActive()
+	if err != nil {
+		return nil, err
+	}
 	for _, l := range languages {
 		var availableCodes []string
-		for _, baseLanguage := range l.BaseLanguages {
-			availableCodes = append(availableCodes, baseLanguage.TargetLanguage.Code)
+		availableBaseLanguages, errBaseLang := s.availableLanguageRepository.FindByBaseLanguageId(l.ID)
+		if errBaseLang != nil {
+			return nil, errBaseLang
+		}
+		for _, baseLanguage := range availableBaseLanguages {
+			targetLanguage, errTargetLang := s.langRepository.Find(baseLanguage.TargetLanguageID)
+			if errTargetLang != nil {
+				return nil, errTargetLang
+			}
+			availableCodes = append(availableCodes, targetLanguage.Code)
 		}
 		langMapDTO = append(langMapDTO, language.LangMapDTO{
 			Code:           l.Code,
@@ -45,33 +59,43 @@ func (s *LanguageService) Map() []language.LangMapDTO {
 			AvailableCodes: availableCodes,
 		})
 	}
-	return langMapDTO
+	return langMapDTO, err
 }
 
-func (s *LanguageService) ExceptLanguage(id int) []language.LangDTO {
-	var langDTO []language.LangDTO
-	var languages = s.availableLanguageRepository.FindByBaseLanguageId(id)
+func (s *LanguageService) ExceptLanguage(id int) ([]language.LangDTO, error) {
+	var langDTO = make([]language.LangDTO, 0)
+	languages, err := s.availableLanguageRepository.FindByBaseLanguageId(id)
+	if err != nil {
+		return nil, err
+	}
 	for _, l := range languages {
+		lang, err1 := s.langRepository.Find(l.TargetLanguageID)
+		if err1 != nil {
+			return nil, err1
+		}
 		var item = language.LangDTO{
-			ID:   l.TargetLanguage.Id,
-			Name: l.TargetLanguage.Name,
-			Code: l.TargetLanguage.Code,
+			ID:   lang.ID,
+			Name: lang.Name,
+			Code: lang.Code,
 		}
 		langDTO = append(langDTO, item)
 	}
-	return langDTO
+	return langDTO, err
 }
 
-func (s *LanguageService) AllActive() []language.LangDTO {
-	var langDTO []language.LangDTO
-	var languages = s.langRepository.AllActive()
+func (s *LanguageService) AllActive() ([]language.LangDTO, error) {
+	var langDTO = make([]language.LangDTO, 0)
+	var languages, err = s.langRepository.AllActive()
+	if err != nil {
+		return nil, err
+	}
 	for _, l := range languages {
 		var item = language.LangDTO{
-			ID:   l.Id,
+			ID:   l.ID,
 			Name: l.Name,
 			Code: l.Code,
 		}
 		langDTO = append(langDTO, item)
 	}
-	return langDTO
+	return langDTO, err
 }

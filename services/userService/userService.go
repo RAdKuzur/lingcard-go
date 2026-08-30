@@ -26,30 +26,45 @@ func New(userRepository *userRepository.UserRepository, courseRepository *course
 	}
 }
 
-func (s *UserService) Profile(ctx context.Context) profile.ProfileDTO {
-	User := ctx.Value("User").(user.User)
-	Role, _ := role.RoleDictionary{}.Get(User.Role)
-	courses := s.courseRepository.GetCoursesByStatus(User.ID, []int{word.LEARNING, word.LEARNED})
-
+func (s *UserService) Profile(ctx context.Context) (profile.ProfileDTO, error) {
+	usr := ctx.Value("User").(user.User)
+	rl := role.RoleDictionary{}.Get(usr.Role)
+	courses, err := s.courseRepository.GetCoursesByStatus(usr.ID, []int{word.LEARNING, word.LEARNED})
+	if err != nil {
+		return profile.ProfileDTO{}, err
+	}
 	wordTranslationIDs := make([]int, len(courses))
 	for i, course := range courses {
 		wordTranslationIDs[i] = course.WordTranslationID
 	}
-	countWordTranslations := s.wordTranslationRepository.CountNewWords(User.BaseLanguageID, User.TargetLanguageID, wordTranslationIDs)
-	learningWords := s.courseRepository.CountUserStats(User.ID, word.LEARNING)
-	learnedWords := s.courseRepository.CountUserStats(User.ID, word.LEARNED)
+	countWordTranslations, err1 := s.wordTranslationRepository.CountNewWords(usr.BaseLanguageID, usr.TargetLanguageID, wordTranslationIDs)
+	if err1 != nil {
+		return profile.ProfileDTO{}, err1
+	}
+	learningWords, err2 := s.courseRepository.CountUserStats(usr.ID, word.LEARNING)
+	if err2 != nil {
+		return profile.ProfileDTO{}, err2
+	}
+	learnedWords, err3 := s.courseRepository.CountUserStats(usr.ID, word.LEARNED)
+	if err3 != nil {
+		return profile.ProfileDTO{}, err3
+	}
 	return profile.ProfileDTO{
-		Username:         User.Name,
-		Role:             Role,
-		BaseLanguageId:   User.BaseLanguageID,
-		TargetLanguageId: User.TargetLanguageID,
+		Username:         usr.Name,
+		Role:             rl,
+		BaseLanguageID:   usr.BaseLanguageID,
+		TargetLanguageID: usr.TargetLanguageID,
 		NoneWords:        countWordTranslations,
 		LearningWords:    learningWords,
 		LearnedWords:     learnedWords,
-	}
+	}, nil
 }
 
-func (s *UserService) Update(ctx context.Context, dto request.ProfileUpdateDTO) {
-	User := ctx.Value("User").(user.User)
-	s.userRepository.Update(User.ID, dto)
+func (s *UserService) Update(ctx context.Context, dto request.ProfileUpdateDTO) error {
+	usr := ctx.Value("User").(user.User)
+	err := s.userRepository.Update(usr.ID, dto)
+	if err != nil {
+		return err
+	}
+	return nil
 }

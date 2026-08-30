@@ -32,120 +32,181 @@ func New(courseRepository *courseRepository.CourseRepository, wordTranslationRep
 	}
 }
 
-func (s *CourseService) ClearProgress(ctx context.Context) {
-	User := ctx.Value("User").(user.User)
-	s.courseRepository.DeleteCoursesByUserID(User.ID)
+func (s *CourseService) ClearProgress(ctx context.Context) error {
+	usr := ctx.Value("User").(user.User)
+	err := s.courseRepository.DeleteCoursesByUserID(usr.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (s *CourseService) ClearWordProgress(courseID int) {
-	s.courseRepository.DeleteWordProgress(courseID)
+func (s *CourseService) ClearWordProgress(courseID int) error {
+	err := s.courseRepository.DeleteWordProgress(courseID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (s *CourseService) WordsByStatus(ctx context.Context, status, page, limit int, search string) ([]wordProgressDTO.WordProgressDTO, int) {
+func (s *CourseService) WordsByStatus(ctx context.Context, status, page, limit int, search string) ([]wordProgressDTO.WordProgressDTO, int, error) {
 	var data = make([]wordProgressDTO.WordProgressDTO, 0)
-	var amountWords int = 0
-	User := ctx.Value("User").(user.User)
+	var amountWords = 0
+	usr := ctx.Value("User").(user.User)
 	switch status {
 	case word.NONE:
 		{
-			courses := s.courseRepository.GetCoursesByStatus(User.ID, []int{word.LEARNING, word.LEARNED})
+			courses, err := s.courseRepository.GetCoursesByStatus(usr.ID, []int{word.LEARNING, word.LEARNED})
+			if err != nil {
+				return nil, 0, err
+			}
 			wordTranslationIDs := make([]int, len(courses))
 			for i, course := range courses {
 				wordTranslationIDs[i] = course.WordTranslationID
 			}
-			wordTranslations := s.wordTranslationRepository.GetSearchNewWords(User.BaseLanguageID, User.TargetLanguageID, page, limit, search, wordTranslationIDs)
+			wordTranslations, err2 := s.wordTranslationRepository.GetSearchNewWords(usr.BaseLanguageID, usr.TargetLanguageID, page, limit, search, wordTranslationIDs)
+			if err2 != nil {
+				return nil, 0, err2
+			}
 			for _, wordTranslation := range wordTranslations {
-				Word := s.wordRepository.Find(wordTranslation.WordID)
-				Level, _ := level.LevelDictionary{}.Get(Word.Level)
+				wrd, err3 := s.wordRepository.Find(wordTranslation.WordID)
+				if err3 != nil {
+					return nil, 0, err3
+				}
+				lvl := level.LevelDictionary{}.Get(wrd.Level)
 				data = append(data, wordProgressDTO.WordProgressDTO{
 					ID:            wordTranslation.ID,
-					Text:          Word.Text,
+					Text:          wrd.Text,
 					Translation:   wordTranslation.Translation,
-					Transcription: Word.Transcription,
-					Level:         Level,
+					Transcription: wrd.Transcription,
+					Level:         lvl,
 					RepeatTime:    "",
 				})
 			}
-			amountWords = s.wordTranslationRepository.CountSearchNewWords(User.BaseLanguageID, User.TargetLanguageID, search, wordTranslationIDs)
-			return data, amountWords
+			amountWords, err = s.wordTranslationRepository.CountSearchNewWords(usr.BaseLanguageID, usr.TargetLanguageID, search, wordTranslationIDs)
+			if err != nil {
+				return nil, 0, err
+			}
+			return data, amountWords, nil
 		}
 	case word.LEARNING:
 		{
-			courses := s.courseRepository.GetByStatus(status, User.ID, page, limit, search)
+			courses, err4 := s.courseRepository.GetByStatus(status, usr.ID, page, limit, search)
+			if err4 != nil {
+				return nil, 0, err4
+			}
 			for _, course := range courses {
-				wordTranslation := s.wordTranslationRepository.Find(course.WordTranslationID)
-				Word := s.wordRepository.Find(wordTranslation.WordID)
-				Level, _ := level.LevelDictionary{}.Get(Word.Level)
+				wordTranslation, err5 := s.wordTranslationRepository.Find(course.WordTranslationID)
+				if err5 != nil {
+					return nil, 0, err5
+				}
+				wrd, err6 := s.wordRepository.Find(wordTranslation.WordID)
+				if err6 != nil {
+					return nil, 0, err6
+				}
+				lvl := level.LevelDictionary{}.Get(wrd.Level)
 				data = append(data, wordProgressDTO.WordProgressDTO{
 					ID:            course.ID,
-					Text:          Word.Text,
+					Text:          wrd.Text,
 					Translation:   wordTranslation.Translation,
-					Transcription: Word.Transcription,
-					Level:         Level,
+					Transcription: wrd.Transcription,
+					Level:         lvl,
 					RepeatTime:    course.LastTimeRepeated.Format("2006-01-02 15:04:05"),
 				})
 			}
-			return data, amountWords
+			amountWords, _ = s.courseRepository.CountByStatus(word.LEARNING, usr.ID, search)
+			return data, amountWords, nil
 		}
 	case word.LEARNED:
 		{
-			courses := s.courseRepository.GetByStatus(status, User.ID, page, limit, search)
-
+			courses, err7 := s.courseRepository.GetByStatus(status, usr.ID, page, limit, search)
+			if err7 != nil {
+				return nil, 0, err7
+			}
 			for _, course := range courses {
-				wordTranslation := s.wordTranslationRepository.Find(course.WordTranslationID)
-				Word := s.wordRepository.Find(wordTranslation.WordID)
-				Level, _ := level.LevelDictionary{}.Get(Word.Level)
+				wordTranslation, err8 := s.wordTranslationRepository.Find(course.WordTranslationID)
+				if err8 != nil {
+					return nil, 0, err8
+				}
+				wrd, err9 := s.wordRepository.Find(wordTranslation.WordID)
+				if err9 != nil {
+					return nil, 0, err9
+				}
+				lvl := level.LevelDictionary{}.Get(wrd.Level)
 				data = append(data, wordProgressDTO.WordProgressDTO{
 					ID:            course.ID,
-					Text:          Word.Text,
+					Text:          wrd.Text,
 					Translation:   wordTranslation.Translation,
-					Transcription: Word.Transcription,
-					Level:         Level,
+					Transcription: wrd.Transcription,
+					Level:         lvl,
 					RepeatTime:    course.LastTimeRepeated.Format("2006-01-02 15:04:05"),
 				})
 			}
-			return data, amountWords
+			amountWords, _ = s.courseRepository.CountByStatus(word.LEARNED, usr.ID, search)
+			return data, amountWords, nil
 		}
 	default:
 		amountWords = 0
-		return data, amountWords
+		return data, amountWords, nil
 	}
 }
 
-func (s *CourseService) NewWord(ctx context.Context) wordProgressDTO.WordTrainingDTO {
-	User := ctx.Value("User").(user.User)
-	count := s.courseRepository.CountRepeatedWords(User.ID)
+func (s *CourseService) NewWord(ctx context.Context) (wordProgressDTO.WordTrainingDTO, error) {
+	usr := ctx.Value("User").(user.User)
 	var dto wordProgressDTO.WordTrainingDTO
+	count, err := s.courseRepository.CountRepeatedWords(usr.ID)
+	if err != nil {
+		return wordProgressDTO.WordTrainingDTO{}, err
+	}
+
 	if count > 0 {
-		course := s.courseRepository.GetOldLearningWords(User.ID)
-		WordTranslation := s.wordTranslationRepository.Find(course.WordTranslationID)
-		Word := s.wordRepository.Find(WordTranslation.WordID)
-		Level, _ := level.LevelDictionary{}.Get(Word.Level)
+		course, err2 := s.courseRepository.GetOldLearningWords(usr.ID)
+		if err2 != nil {
+			return wordProgressDTO.WordTrainingDTO{}, err2
+		}
+		wrdTranslation, err3 := s.wordTranslationRepository.Find(course.WordTranslationID)
+		if err3 != nil {
+			return wordProgressDTO.WordTrainingDTO{}, err3
+		}
+		wrd, err4 := s.wordRepository.Find(wrdTranslation.WordID)
+		if err4 != nil {
+			return wordProgressDTO.WordTrainingDTO{}, err4
+		}
+		lvl := level.LevelDictionary{}.Get(wrd.Level)
 		dto = wordProgressDTO.WordTrainingDTO{
 			ID:            course.WordTranslationID,
-			Text:          Word.Text,
-			Translation:   WordTranslation.Translation,
-			Transcription: Word.Transcription,
-			Level:         Level,
+			Text:          wrd.Text,
+			Translation:   wrdTranslation.Translation,
+			Transcription: wrd.Transcription,
+			Level:         lvl,
 			Status:        course.Status,
 			Repeat:        course.Repeat,
 		}
 	} else {
-		courses := s.courseRepository.GetCoursesByStatus(User.ID, []int{word.LEARNING, word.LEARNED})
+		courses, err5 := s.courseRepository.GetCoursesByStatus(usr.ID, []int{word.LEARNING, word.LEARNED})
+		if err5 != nil {
+			return wordProgressDTO.WordTrainingDTO{}, err5
+		}
 		wordTranslationIDs := make([]int, len(courses))
 		for i, course := range courses {
 			wordTranslationIDs[i] = course.WordTranslationID
 		}
-		WordTranslation := s.courseRepository.GetNewWord(User.BaseLanguageID, User.TargetLanguageID, wordTranslationIDs)
-		if WordTranslation.ID != 0 {
-			Word := s.wordRepository.Find(WordTranslation.WordID)
-			Level, _ := level.LevelDictionary{}.Get(Word.Level)
+		wrdTranslation, err6 := s.courseRepository.GetNewWord(usr.BaseLanguageID, usr.TargetLanguageID, wordTranslationIDs)
+		if err6 != nil {
+			return wordProgressDTO.WordTrainingDTO{}, err6
+		}
+		if wrdTranslation.ID != 0 {
+			wrd, err7 := s.wordRepository.Find(wrdTranslation.WordID)
+			if err7 != nil {
+				return wordProgressDTO.WordTrainingDTO{}, err7
+			}
+			lvl := level.LevelDictionary{}.Get(wrd.Level)
 			dto = wordProgressDTO.WordTrainingDTO{
-				ID:            WordTranslation.ID,
-				Text:          Word.Text,
-				Translation:   WordTranslation.Translation,
-				Transcription: Word.Transcription,
-				Level:         Level,
+				ID:            wrdTranslation.ID,
+				Text:          wrd.Text,
+				Translation:   wrdTranslation.Translation,
+				Transcription: wrd.Transcription,
+				Level:         lvl,
 				Status:        word.NONE,
 				Repeat:        0,
 			}
@@ -153,12 +214,15 @@ func (s *CourseService) NewWord(ctx context.Context) wordProgressDTO.WordTrainin
 			dto = wordProgressDTO.WordTrainingDTO{}
 		}
 	}
-	return dto
+	return dto, nil
 }
 
-func (s *CourseService) RepeatWord(ctx context.Context, id int, status bool) {
+func (s *CourseService) RepeatWord(ctx context.Context, id int, status bool) error {
 	User := ctx.Value("User").(user.User)
-	course := s.courseRepository.GetCourseByWordTranslationIDAndUserID(id, User.ID)
+	course, err := s.courseRepository.GetCourseByWordTranslationIDAndUserID(id, User.ID)
+	if err != nil {
+		return err
+	}
 	if course.ID != 0 {
 		if status == true {
 			dto := courseDTO.CourseDTO{
@@ -166,13 +230,19 @@ func (s *CourseService) RepeatWord(ctx context.Context, id int, status bool) {
 				Status:           getStatus(course.Repeat),
 				LastTimeRepeated: Repeat(course.Repeat),
 			}
-			s.courseRepository.Update(course.ID, dto)
+			err2 := s.courseRepository.Update(course.ID, dto)
+			if err2 != nil {
+				return err2
+			}
 		} else {
 			dto := courseDTO.SimpleCourseDTO{
 				Status:           word.LEARNING,
 				LastTimeRepeated: time.Now().Add(10 * time.Minute),
 			}
-			s.courseRepository.SimpleUpdate(course.ID, dto)
+			err3 := s.courseRepository.SimpleUpdate(course.ID, dto)
+			if err3 != nil {
+				return err3
+			}
 		}
 	} else {
 		if status == true {
@@ -183,7 +253,10 @@ func (s *CourseService) RepeatWord(ctx context.Context, id int, status bool) {
 				Status:            word.LEARNED,
 				LastTimeRepeated:  Repeat(0),
 			}
-			s.courseRepository.ExtendedInsert(dto)
+			err4 := s.courseRepository.ExtendedInsert(dto)
+			if err4 != nil {
+				return err4
+			}
 		} else {
 			dto := courseDTO.ExtendedCourseDTO{
 				WordTranslationID: id,
@@ -192,24 +265,44 @@ func (s *CourseService) RepeatWord(ctx context.Context, id int, status bool) {
 				Status:            word.LEARNING,
 				LastTimeRepeated:  Repeat(0),
 			}
-			s.courseRepository.ExtendedInsert(dto)
+			err5 := s.courseRepository.ExtendedInsert(dto)
+			if err5 != nil {
+				return err5
+			}
 		}
 	}
+	return nil
 }
 
-func (s *CourseService) Teachable(ctx context.Context) (string, int) {
-	User := ctx.Value("User").(user.User)
-	language := s.languageRepository.Find(User.TargetLanguageID)
-	allWordAmount := s.wordTranslationRepository.CountByTargetLanguageIdAndBaseLanguageId(User.BaseLanguageID, User.TargetLanguageID, "")
-	amountLearnedWords := len(s.courseRepository.GetCoursesByStatus(User.ID, []int{word.LEARNED}))
-	amountLearningWords := s.courseRepository.CountRepeatedWords(User.ID)
-	if amountLearnedWords == allWordAmount {
-		return language.Code, word.LEARNED
+func (s *CourseService) Teachable(ctx context.Context) (string, int, error) {
+	usr := ctx.Value("User").(user.User)
+	language, err := s.languageRepository.Find(usr.TargetLanguageID)
+	if err != nil {
+		return "", 0, err
+	}
+	allWordAmount, err2 := s.wordTranslationRepository.CountByTargetLanguageIdAndBaseLanguageId(usr.BaseLanguageID, usr.TargetLanguageID, "")
+	if err2 != nil {
+		return "", 0, err2
+	}
+	learnedWords, err3 := s.courseRepository.GetCoursesByStatus(usr.ID, []int{word.LEARNED})
+	if err3 != nil {
+		return "", 0, err3
+	}
+	amountLearningWords, err4 := s.courseRepository.CountRepeatedWords(usr.ID)
+	if err4 != nil {
+		return "", 0, err4
+	}
+	repeatedWords, err5 := s.courseRepository.GetCoursesByStatus(usr.ID, []int{word.LEARNED, word.LEARNING})
+	if err5 != nil {
+		return "", 0, err5
+	}
+	if len(learnedWords) == allWordAmount {
+		return language.Code, word.LEARNED, nil
 	} else {
-		if amountLearningWords == 0 && allWordAmount == len(s.courseRepository.GetCoursesByStatus(User.ID, []int{word.LEARNED, word.LEARNING})) {
-			return language.Code, word.LEARNING
+		if amountLearningWords == 0 && allWordAmount == len(repeatedWords) {
+			return language.Code, word.LEARNING, nil
 		} else {
-			return language.Code, word.NONE
+			return language.Code, word.NONE, nil
 		}
 	}
 }
