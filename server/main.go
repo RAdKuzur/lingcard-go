@@ -6,6 +6,7 @@ import (
 	"lingcard-go/handlers/authHandler"
 	"lingcard-go/handlers/dictionaryHandler"
 	"lingcard-go/handlers/languageHandler"
+	"lingcard-go/handlers/metricsHandler"
 	"lingcard-go/handlers/postHandler"
 	"lingcard-go/handlers/profileHandler"
 	"lingcard-go/handlers/progressHandler"
@@ -14,6 +15,7 @@ import (
 	"lingcard-go/handlers/trainingHandler"
 	"lingcard-go/handlers/voteHandler"
 	"lingcard-go/helpers/database"
+	"lingcard-go/helpers/redis"
 	"lingcard-go/middlewares/authMiddleware"
 	"lingcard-go/middlewares/corsMiddleware"
 	"lingcard-go/repositories/availableLanguageRepository"
@@ -45,6 +47,8 @@ import (
 func main() {
 	db := database.New()
 	dbConnect := db.Connect()
+	redisClient := redis.New()
+	rdb := redisClient.Client()
 	authMid := authMiddleware.New(dbConnect)
 	corsMid := corsMiddleware.New()
 	router := chi.NewRouter()
@@ -85,9 +89,11 @@ func main() {
 	profileHand := profileHandler.New(userSer, courseSer)
 	progressHand := progressHandler.New(courseSer)
 	trainingHand := trainingHandler.New(courseSer)
+	metricsHand := metricsHandler.New(redisClient)
 
 	router.Route("/api", func(r chi.Router) {
 		r.Use(corsMid.Handle)
+		r.Get("/metrics", metricsHand.Metrics)
 		r.Post("/login", authHand.Login)
 
 		r.Post("/refresh", authHand.Refresh)
