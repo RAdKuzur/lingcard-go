@@ -18,6 +18,7 @@ import (
 	"lingcard-go/helpers/redis"
 	"lingcard-go/middlewares/authMiddleware"
 	"lingcard-go/middlewares/corsMiddleware"
+	"lingcard-go/middlewares/statMiddleware"
 	"lingcard-go/repositories/availableLanguageRepository"
 	"lingcard-go/repositories/commentRepository"
 	"lingcard-go/repositories/courseRepository"
@@ -51,8 +52,7 @@ func main() {
 	rdb := redisClient.Client()
 	authMid := authMiddleware.New(dbConnect)
 	corsMid := corsMiddleware.New()
-	router := chi.NewRouter()
-	router.Use(middleware.Logger)
+	statMid := statMiddleware.New(rdb)
 
 	userRepo := userRepository.New(dbConnect)
 	tokenRepo := tokenRepository.New(dbConnect)
@@ -89,7 +89,11 @@ func main() {
 	profileHand := profileHandler.New(userSer, courseSer)
 	progressHand := progressHandler.New(courseSer)
 	trainingHand := trainingHandler.New(courseSer)
-	metricsHand := metricsHandler.New(redisClient)
+	metricsHand := metricsHandler.New(rdb)
+
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+	router.Use(statMid.Handle)
 
 	router.Route("/api", func(r chi.Router) {
 		r.Use(corsMid.Handle)
