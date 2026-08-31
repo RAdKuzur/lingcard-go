@@ -26,6 +26,7 @@ func (s *LanguageService) All() ([]language.LangDTO, error) {
 	}
 	for _, l := range languages {
 		var item = language.LangDTO{
+			ID:   l.ID,
 			Name: l.Name,
 			Code: l.Code,
 		}
