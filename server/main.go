@@ -14,6 +14,7 @@ import (
 	"lingcard-go/handlers/suggestionHandler"
 	"lingcard-go/handlers/trainingHandler"
 	"lingcard-go/handlers/voteHandler"
+	"lingcard-go/handlers/wordHandler"
 	"lingcard-go/helpers/database"
 	"lingcard-go/helpers/redis"
 	"lingcard-go/middlewares/authMiddleware"
@@ -90,6 +91,7 @@ func main() {
 	progressHand := progressHandler.New(courseSer)
 	trainingHand := trainingHandler.New(courseSer)
 	metricsHand := metricsHandler.New(rdb)
+	wordHand := wordHandler.New()
 
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
@@ -109,6 +111,7 @@ func main() {
 		r.Get("/map-languages", langHand.GetLanguageMap)
 		r.Get("/posts/{code}", postHand.GetPostsByCode)
 		r.Get("/posts", postHand.GetPostsByCode)
+		r.Get("/packages/{code}", wordHand.DownloadPackage)
 
 		r.Group(func(r chi.Router) {
 			r.Use(authMid.Handler)
