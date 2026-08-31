@@ -132,7 +132,7 @@ func (s *AuthService) Refresh(refreshToken string, r *http.Request) (token.Token
 
 func (s *AuthService) Register(dto request.RegisterDTO, r *http.Request) (token.TokenDTO, error) {
 	unique, _ := s.userRepository.Unique(dto.Name)
-	if unique {
+	if !unique {
 		ipAddress := r.Header.Get("X-Real-Ip")
 		userAgent := r.Header.Get("User-Agent")
 		password, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
