@@ -20,6 +20,7 @@ import (
 	"lingcard-go/middlewares/authMiddleware"
 	"lingcard-go/middlewares/corsMiddleware"
 	"lingcard-go/middlewares/statMiddleware"
+	"lingcard-go/migrations"
 	"lingcard-go/repositories/availableLanguageRepository"
 	"lingcard-go/repositories/commentRepository"
 	"lingcard-go/repositories/courseRepository"
@@ -47,6 +48,9 @@ import (
 )
 
 func main() {
+
+	migrations.RunMigrations()
+
 	db := database.New()
 	dbConnect := db.Connect()
 	redisClient := redis.New()
