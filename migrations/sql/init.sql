@@ -23,6 +23,34 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
+DROP TABLE IF EXISTS
+    public.voices,
+    public.vote_options,
+    public.votes,
+    public.comments,
+    public.reactions,
+    public.posts,
+    public.courses,
+    public.word_translations,
+    public.words,
+    public.suggestions,
+    public.tokens,
+    public.personal_access_tokens,
+    public.available_languages,
+    public.users,
+    public.languages,
+    public.visits,
+    public.error_logs,
+    public.cache,
+    public.cache_locks,
+    public.sessions,
+    public.password_reset_tokens,
+    public.jobs,
+    public.job_batches,
+    public.failed_jobs,
+    public.migrations
+CASCADE;
+
 --
 -- TOC entry 249 (class 1259 OID 17083)
 -- Name: available_languages; Type: TABLE; Schema: public; Owner: admin

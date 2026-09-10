@@ -20,10 +20,12 @@ func (h *TelemetryHandler) Metrics(w http.ResponseWriter, r *http.Request) {
 	httpTotalRequest, err1 := h.rdb.Get(ctx, "http_total_requests").Result()
 	averageLatency, err3 := h.rdb.Get(ctx, "total_request_latency").Result()
 	if err1 != nil || err3 != nil {
-
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	response := "http_total_requests " + httpTotalRequest + "\n" +
 		"total_request_latency " + averageLatency
 	w.Header().Set("Content-Type", "text/plain; version=0.0.4")
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(response))
 }

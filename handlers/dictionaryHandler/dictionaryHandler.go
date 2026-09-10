@@ -42,7 +42,6 @@ func (h *DictionaryHandler) Translate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 	resp := map[string]interface{}{
 		"success":     true,
 		"data":        words,

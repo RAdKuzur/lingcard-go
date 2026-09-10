@@ -54,6 +54,7 @@ func (h *ProfileHandler) Update(w http.ResponseWriter, r *http.Request) {
 	err2 := h.userService.Update(ctx, requestDTO)
 	if err2 != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
