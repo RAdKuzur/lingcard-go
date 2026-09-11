@@ -26,7 +26,7 @@ func (r *TokenRepository) CreateToken(refreshToken string, userId int, ip string
 		UserID:       userId,
 		IPAddress:    ip,
 		IsRevoked:    false,
-		ExpiresAt:    time.Now().Add(time.Minute * time.Duration(minutes)).String(),
+		ExpiresAt:    time.Now().Add(time.Minute * time.Duration(minutes)).Format("2006-01-02 15:04:05"),
 	}
 	err := r.db.Exec("INSERT INTO tokens (refresh_token, user_agent, user_id, ip_address, is_revoked, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
 		item.RefreshToken, item.UserAgent, item.UserID, item.IPAddress, item.IsRevoked, item.ExpiresAt).Error
