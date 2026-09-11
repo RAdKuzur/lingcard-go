@@ -1,4 +1,17 @@
 services:
+  nginx:
+    image: nginx:stable-alpine
+    volumes:
+      - ./build/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    networks:
+      - network
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
   db:
     image: postgres:17
     volumes:
@@ -38,6 +51,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    networks:
+      - network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     networks:
       - network
 

@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+.circle {
+    border-radius: 50%;
+}
