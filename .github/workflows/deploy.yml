@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    environment: "production"
+    steps:
+      - name: Pull
+        run: |
+          cd /root/lingcard-go
+          git pull
+
+      - name: Prepare global environment
+        run: |
+          cd /root/lingcard-go
+          cp .env.example .env
+          sed -i "s|^DB_HOST=.*|DB_HOST=${{ vars.DB_HOST }}|" .env
+          sed -i "s|^DB_PORT=.*|DB_PORT=${{ vars.DB_PORT }}|" .env
+          sed -i "s|^DB_USER=.*|DB_USER=${{ vars.DB_USER }}|" .env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ vars.DB_PASSWORD }}|" .env
+          sed -i "s|^DB_NAME=.*|DB_NAME=${{ vars.DB_NAME }}|" .env
+
+      - name: Prepare frontend environment
+        run: |
+          cd /root/lingcard-go/frontend
+          cp .env.example .env
+          sed -i "s|^VITE_BACKEND_URL=.*|VITE_BACKEND_URL=${{ vars.VITE_BACKEND_URL }}|" .env
+          sed -i "s|^VITE_DA_LINK=.*|VITE_DA_LINK=${{ vars.VITE_DA_LINK }}|" .env
+          sed -i "s|^VITE_BOOSTY_LINK=.*|VITE_BOOSTY_LINK=${{ vars.VITE_BOOSTY_LINK }}|" .env
+
+      - name: Prepare backend environment
+        run: |
+          cd /root/lingcard-go/backend
+          cp .env.example .env
+          sed -i "s|^DB_USER=.*|DB_USER=${{ vars.DB_USER }}|" .env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ vars.DB_PASSWORD }}|" .env
+          sed -i "s|^DB_NAME=.*|DB_NAME=${{ vars.DB_NAME }}|" .env
+          sed -i "s|^DB_HOST=.*|DB_HOST=${{ vars.DB_HOST }}|" .env
+          sed -i "s|^DB_PORT=.*|DB_PORT=${{ vars.DB_PORT }}|" .env
+          sed -i "s|^SECRET_KEY=.*|SECRET_KEY=${{ vars.SECRET_KEY }}|" .env
+          sed -i "s|^REFRESH_TOKEN_TIME_EXPIRE=.*|REFRESH_TOKEN_TIME_EXPIRE=${{ vars.REFRESH_TOKEN_TIME_EXPIRE }}|" .env
+          sed -i "s|^REDIS_URL=.*|REDIS_URL=${{ vars.REDIS_URL }}|" .env
+          sed -i "s|^ACCESS_TOKEN_TIME_EXPIRE=.*|ACCESS_TOKEN_TIME_EXPIRE=${{ vars.ACCESS_TOKEN_TIME_EXPIRE }}|" .env
+
+      - name: Deploy
+        run: |
+          cd /root/lingcard-go
+          docker compose -f docker-compose.yml up --build -d
