@@ -20,7 +20,6 @@ import (
 	"lingcard-go/middlewares/authMiddleware"
 	"lingcard-go/middlewares/corsMiddleware"
 	"lingcard-go/middlewares/statMiddleware"
-	"lingcard-go/migrations"
 	"lingcard-go/repositories/availableLanguageRepository"
 	"lingcard-go/repositories/commentRepository"
 	"lingcard-go/repositories/courseRepository"
@@ -44,7 +43,6 @@ import (
 	"lingcard-go/services/userService"
 	"lingcard-go/services/voteService"
 	"lingcard-go/services/wordTranslationService"
-	"log"
 	"net/http"
 )
 
@@ -54,16 +52,6 @@ func main() {
 	dbConnect := db.Connect()
 	redisClient := redis.New()
 	rdb := redisClient.Client()
-
-	migrator := migrations.NewMigrator(dbConnect)
-	seed := migrations.NewSeeder(dbConnect)
-
-	migrator.RunMigrations()
-	err := seed.RunSeeders()
-
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	authMid := authMiddleware.New(dbConnect)
 	corsMid := corsMiddleware.New()

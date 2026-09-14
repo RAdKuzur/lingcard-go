@@ -34,7 +34,7 @@ services:
     image: redis:latest
     restart: always
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -44,6 +44,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    command: run server/main.go
     ports:
       - "8080:8080"
     depends_on:
@@ -51,6 +52,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - network
+
+  migrator:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: run migrate.go
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - network
 
@@ -58,10 +72,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    command: dev
+    ports:
+      - "127.0.0.1:5173:5173"
+    command: preview -- --host --port 5173
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /app/dist
     networks:
       - network
 
